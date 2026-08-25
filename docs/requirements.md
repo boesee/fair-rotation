@@ -10,7 +10,7 @@ Entity-Modell und die Use-Case-Spezifikationen.
 
 | ID | Anforderung | Quelle (Vision) |
 |---|---|---|
-| FR-1 | Der Trainer kann sich mit einem Benutzerkonto (E-Mail/Passwort) anmelden. Ohne Anmeldung sind keine Daten lesbar oder schreibbar. | Constraints: Zugriffsschutz |
+| FR-1 | Der Trainer kann sich mit einem Benutzerkonto (Username/Passwort) anmelden. Ohne Anmeldung sind keine Daten lesbar oder schreibbar. | Constraints: Zugriffsschutz |
 | FR-2 | Der Trainer kann sich abmelden. | Constraints: Zugriffsschutz |
 
 ### Kaderverwaltung
