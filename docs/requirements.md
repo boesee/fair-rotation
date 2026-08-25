@@ -10,7 +10,7 @@ Entity-Modell und die Use-Case-Spezifikationen.
 
 | ID | Anforderung | Quelle (Vision) |
 |---|---|---|
-| FR-1 | Der Trainer kann sich mit einem Benutzerkonto (Username/Passwort) anmelden. Ohne Anmeldung sind keine Daten lesbar oder schreibbar. | Constraints: Zugriffsschutz |
+| FR-1 | Der Trainer kann sich mit einem Benutzerkonto (Benutzername/Passwort) anmelden. Ohne Anmeldung sind keine Daten lesbar oder schreibbar. | Constraints: Zugriffsschutz |
 | FR-2 | Der Trainer kann sich abmelden. | Constraints: Zugriffsschutz |
 
 ### Kaderverwaltung
@@ -21,6 +21,7 @@ Entity-Modell und die Use-Case-Spezifikationen.
 | FR-11 | Der Trainer kann einen Spieler im Kader bearbeiten. | Scope: Kaderverwaltung |
 | FR-12 | Der Trainer kann einen Spieler aus dem Kader entfernen. | Scope: Kaderverwaltung |
 | FR-13 | Der Kader bleibt dauerhaft gespeichert und steht bei jedem neuen Turnier/Spiel unverändert zur Verfügung. | Scope: Kaderverwaltung |
+| FR-14 | Der Trainer kann einen zuvor deaktivierten Spieler wieder aktivieren; er erscheint danach wieder in der Kaderliste und ist für neue Spiele wählbar. | Scope: Kaderverwaltung |
 
 ### Turnier- & Spielverwaltung
 
