@@ -1,4 +1,4 @@
-# Vision: Spielzeit-Rotation für Junioren-Fussballtraining
+# Vision: Spielzeit-Rotation für Junioren-Fussballturnier
 
 ## Mission
 
