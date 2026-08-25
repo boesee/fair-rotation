@@ -1,4 +1,4 @@
-# Requirements-Katalog: Spielzeit-Rotation für Junioren-Fussballtraining
+# Requirements-Katalog: Spielzeit-Rotation für Junioren-Fussballturnier
 
 Abgeleitet aus `docs/vision.md`. Jede Anforderung ist auf ein Vision-Ziel
 rückführbar (Spalte "Quelle"). Dieser Katalog ist die Grundlage für das
