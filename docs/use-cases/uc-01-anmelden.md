@@ -17,7 +17,7 @@ Trainer
 
 ## Vorbedingungen
 
-- Ein Benutzerkonto (E-Mail/Passwort) existiert bereits in Supabase Auth.
+- Ein Benutzerkonto (Username/Passwort) existiert bereits in Supabase Auth.
   Die Erstellung dieses Kontos ist kein Teil dieses Use Case, da es sich um
   ein einmaliges Setup durch den Trainer selbst handelt (kein
   Self-Service-Registrierungs-Flow in der App, vgl. Vision: ein Trainer,
@@ -43,8 +43,8 @@ Trainer
 2. Die App prüft, ob bereits eine gültige, nicht abgelaufene Session
    vorhanden ist.
 3. Keine gültige Session vorhanden → die App zeigt das Login-Formular
-   (Felder: E-Mail, Passwort).
-4. Der Trainer gibt E-Mail und Passwort ein und bestätigt.
+   (Felder: Username, Passwort).
+4. Der Trainer gibt Username und Passwort ein und bestätigt.
 5. Die App sendet die Anmeldedaten an Supabase Auth.
 6. Supabase Auth validiert die Anmeldedaten und liefert ein gültiges
    Session-Token zurück.
@@ -68,9 +68,9 @@ möglich.
 
 **E1 – Falsche Anmeldedaten**
 Bei Schritt 6: Supabase Auth lehnt die Anmeldedaten ab (falsches Passwort
-oder unbekannte E-Mail).
-1. Die App zeigt eine allgemeine Fehlermeldung ("E-Mail oder Passwort
-   falsch") – ohne zu verraten, ob die E-Mail existiert.
+oder unbekannte Username).
+1. Die App zeigt eine allgemeine Fehlermeldung ("Username oder Passwort
+   falsch") – ohne zu verraten, ob die Username existiert.
 2. Der Trainer bleibt auf dem Login-Formular und kann es erneut versuchen.
 
 **E2 – Netzwerkfehler**
@@ -82,16 +82,16 @@ erreichbar.
    ist.
 
 **E3 – Leere Pflichtfelder**
-Bei Schritt 4: E-Mail oder Passwort sind leer.
+Bei Schritt 4: Username oder Passwort sind leer.
 1. Die App verhindert das Absenden und markiert die fehlenden Felder.
 
 ## Testfälle
 
 | # | Szenario | Erwartetes Ergebnis |
 |---|---|---|
-| T1 | Korrekte E-Mail + korrektes Passwort eingeben | Anmeldung erfolgreich, Hauptübersicht wird angezeigt (Basic Flow) |
+| T1 | Korrekte Username + korrektes Passwort eingeben | Anmeldung erfolgreich, Hauptübersicht wird angezeigt (Basic Flow) |
 | T2 | Falsches Passwort eingeben | Fehlermeldung, Login-Formular bleibt sichtbar (E1) |
-| T3 | Unbekannte E-Mail eingeben | Gleiche generische Fehlermeldung wie T2 (E1) – kein Hinweis, ob die E-Mail existiert |
+| T3 | Unbekannte Username eingeben | Gleiche generische Fehlermeldung wie T2 (E1) – kein Hinweis, ob die Username existiert |
 | T4 | App erneut öffnen innerhalb gültiger Session-Dauer | Kein Login-Formular, direkt Hauptübersicht (A1) |
 | T5 | "Abmelden" auslösen, danach App neu laden | Login-Formular erscheint wieder, kein Datenzugriff mehr möglich (A2) |
 | T6 | Anmeldeversuch ohne Netzwerkverbindung | Fehlermeldung zu Verbindungsproblem, kein Absturz (E2) |
