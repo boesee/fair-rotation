@@ -1,4 +1,4 @@
-# Entity-Modell: Spielzeit-Rotation für Junioren-Fussballtraining
+# Entity-Modell: Spielzeit-Rotation für Junioren-Fussballturnier
 
 Abgeleitet aus `docs/requirements.md`. Grundlage für die Supabase-
 Tabellenstruktur und die Use-Case-Spezifikationen.
