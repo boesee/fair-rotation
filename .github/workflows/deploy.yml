@@ -1,0 +1,72 @@
+name: Deploy Frontend
+
+# Baut das Vite-Frontend und veroeffentlicht es auf GitHub Pages.
+# Trigger: Push auf main mit Aenderungen unter frontend/**, sowie manueller
+# Start (workflow_dispatch). Unabhaengig vom Supabase-Keepalive-Workflow.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'frontend/**'
+      - '.github/workflows/deploy.yml'
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Nur ein Deploy gleichzeitig; laufende Deploys werden nicht abgebrochen,
+# sondern gequeued.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - name: Repository auschecken
+        uses: actions/checkout@v4
+
+      - name: Node.js einrichten
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Abhaengigkeiten installieren
+        run: npm ci
+
+      - name: Frontend bauen
+        run: npm run build
+        env:
+          # Oeffentliche Werte (docs/architecture.md, Abschnitt 3) - als
+          # Repository Variables hinterlegt, nicht als Secrets, da sie
+          # ohnehin im ausgelieferten JS-Bundle landen.
+          VITE_SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_PUBLISHABLE_KEY: ${{ vars.VITE_SUPABASE_PUBLISHABLE_KEY }}
+
+      - name: GitHub Pages konfigurieren
+        uses: actions/configure-pages@v5
+
+      - name: Build-Artefakt hochladen
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: frontend/dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Auf GitHub Pages veroeffentlichen
+        id: deployment
+        uses: actions/deploy-pages@v4
