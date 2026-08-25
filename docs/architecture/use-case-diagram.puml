@@ -1,0 +1,73 @@
+@startuml use-case-diagram
+left to right direction
+skinparam packageStyle rectangle
+skinparam usecase {
+  BackgroundColor White
+  BorderColor Black
+}
+
+actor Trainer
+
+rectangle "Spielzeit-Rotation" {
+  usecase "UC-01\nAnmelden" as UC01
+  usecase "UC-02\nSpieler zum Kader\nverwalten" as UC02
+  usecase "UC-03\nTurnier anlegen" as UC03
+  usecase "UC-04\nSpiel vorbereiten" as UC04
+  usecase "UC-05\nSpielzeit erfassen" as UC05
+  usecase "UC-06\nStatistik einsehen" as UC06
+}
+
+Trainer --> UC01
+Trainer --> UC02
+Trainer --> UC03
+Trainer --> UC04
+Trainer --> UC05
+Trainer --> UC06
+
+UC02 ..> UC01 : <<include>>
+UC03 ..> UC01 : <<include>>
+UC04 ..> UC01 : <<include>>
+UC05 ..> UC01 : <<include>>
+UC06 ..> UC01 : <<include>>
+
+UC04 ..> UC03 : <<precedes>>
+UC05 ..> UC04 : <<precedes>>
+UC06 ..> UC05 : <<precedes>>
+
+note right of UC01
+  Zugriffsschutz (FR-1/FR-2, NFR-4):
+  alle anderen Use Cases setzen
+  eine gültige Session voraus.
+end note
+
+note bottom of UC02
+  Beinhaltet Deaktivieren und
+  Reaktivieren (Soft-Delete,
+  FR-12/FR-14).
+end note
+
+note bottom of UC03
+  Turnier = Container für bis zu
+  6 Spiele, flexibel erfassbar
+  (FR-20/21/25/26).
+end note
+
+note bottom of UC04
+  Feldzuteilung nur bei Modus
+  3vs3 nötig (FR-23/24); bei
+  6vs6 automatisch.
+end note
+
+note bottom of UC05
+  Beinhaltet "Spiel beenden"
+  als Alternativablauf (FR-35) –
+  Voraussetzung für UC-06.
+end note
+
+note bottom of UC06
+  Berücksichtigt ausschliesslich
+  Spiele mit Status "beendet"
+  (FR-40/41).
+end note
+
+@enduml
