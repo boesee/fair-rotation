@@ -29,8 +29,9 @@ Entity-Modell und die Use-Case-Spezifikationen.
 | FR-20 | Der Trainer kann ein neues Turnier anlegen; ein Turnier umfasst immer 6 Spiele: 3 im Modus 3vs3 und 3 im Modus 6vs6. Die Reihenfolge der 6 Spiele wird beim Anlegen individuell festgelegt (variiert je Turnier). | Ziele: Turnier mit mehreren Spielen |
 | FR-21 | Der Trainer kann innerhalb eines Turniers ein einzelnes Spiel auswählen/starten. | Ziele: pro Spiel separate Erfassung |
 | FR-22 | Der Trainer kann vor Spielbeginn aus dem Kader die anwesenden Spieler markieren. | Ziele: Anwesenheit erfassen |
-| FR-23 | Der Trainer kann pro Spiel wählen, ob auf einem oder zwei Feldern gleichzeitig gespielt wird. | Ziele: 1 oder 2 Felder |
-| FR-24 | Der Trainer teilt jeden anwesenden Spieler manuell einem der gewählten Felder zu (kein Automatik-Vorschlag). | Ziele: Feldzuteilung |
+| FR-23 | Jedes Spiel hat einen fest zugeordneten Modus (3vs3 oder 6vs6), der beim Anlegen des Turniers pro Spiel festgelegt wird. Die Feldanzahl ergibt sich automatisch aus dem Modus: 3vs3 → 2 Felder (Team wird gesplittet), 6vs6 → 1 Feld (ganzes Team). Keine freie Feld-Wahl durch den Trainer. | Ziele: Spielmodus 3vs3/6vs6 (SFV Play More Football) |
+| FR-24 | Bei einem 3vs3-Spiel teilt der Trainer jeden anwesenden Spieler manuell einem der zwei Felder zu (kein Automatik-Vorschlag). Bei einem 6vs6-Spiel entfällt dieser Schritt – alle anwesenden Spieler sind automatisch dem einen Feld zugeordnet. | Ziele: Feldzuteilung |
+| FR-25 | Weicht die Zusammensetzung eines Turniers von 3× 3vs3 + 3× 6vs6 ab, zeigt die App eine Warnung – das Speichern wird dadurch nicht blockiert. | Entity-Modell: Konsistenzregel |
 
 ### Spielzeit-Erfassung
 
