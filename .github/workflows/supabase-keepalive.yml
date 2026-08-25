@@ -15,12 +15,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Ping Supabase REST API
-        # apikey-Header nimmt den Publishable Key (sb_publishable_...),
-        # der den frueheren "anon key" ersetzt.
+        # SUPABASE_URL ist die vollstaendige Data-API-URL aus Supabase ->
+        # Integrations -> Data API (endet bereits auf /rest/v1/), wird hier
+        # unveraendert verwendet. Diese Route verlangt im neuen Supabase-
+        # Key-System den Secret Key (sb_secret_...), nicht den Publishable
+        # Key. Der Secret Key darf hier stehen, weil er nur server-seitig
+        # in Actions verwendet wird, nie im Client-Code.
         run: |
           http_status=$(curl --silent --output /tmp/response.json --write-out "%{http_code}" \
-            "${SUPABASE_URL}/rest/v1/" \
-            -H "apikey: ${SUPABASE_PUBLISHABLE_KEY}")
+            "${SUPABASE_URL}" \
+            -H "apikey: ${SUPABASE_SECRET_KEY}")
 
           echo "HTTP status: $http_status"
           cat /tmp/response.json
@@ -31,4 +35,4 @@ jobs:
           fi
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-          SUPABASE_PUBLISHABLE_KEY: ${{ secrets.SUPABASE_PUBLISHABLE_KEY }}
+          SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
