@@ -45,7 +45,7 @@ Es gibt zwei unabhängige GitHub-Actions-Workflows im Repo:
 |---|---|---|
 | Frontend-Framework | React 18 + TypeScript | Grösstes Ökosystem, beste Unterstützung durch AI-Codegen (passt zu AIUP), `supabase-js` funktioniert identisch wie in jedem anderen Framework. |
 | Build-Tool | Vite | Schneller Dev-Server, einfache GitHub-Pages-Integration über `base`-Config, keine Zusatzkonfiguration nötig. |
-| Styling | Plain CSS (CSS Modules) | Keine zusätzliche Abhängigkeit; bei der geringen Anzahl Views (Login, Kader, Turnier, Spiel, Statistik) rechtfertigt sich kein Utility-Framework. |
+| Styling | Tailwind CSS | Utility-first, deckt sowohl Standard-Formulare/Buttons als auch die individuellen Kartenlayouts der Feld-Übersicht (Timer, Status-Badges) ab; Setup mit Vite minimal (PostCSS-Plugin). Ein klassenloses Framework (Pico.css/Water.css) wäre für Formulare ausreichend, gäbe aber keine Kontrolle über die custom Spielerkarten. |
 | Backend-Client | `@supabase/supabase-js` | Offizieller Client für Auth + PostgREST-Zugriff, übernimmt Session-Handling (Token-Refresh, `localStorage`-Persistenz). |
 | State-Management | React State/Context, kein externes State-Management | Einzelgerät, keine Realtime-Synchronisation zwischen Clients nötig (siehe Abschnitt 5) – der Mehraufwand einer State-Library (Redux/Zustand) ist nicht gerechtfertigt. |
 | Hosting | GitHub Pages | Vorgabe (Constraint in vision.md), rein statisches Hosting ohne eigenen Server. |
