@@ -51,12 +51,15 @@ Spiele erreicht sind.
 5. Die App zeigt das neue Spiel in der Turnierübersicht.
 
 **A2 – Reihenfolge nachträglich anpassen (FR-26)**
-1. Der Trainer wählt in der Turnierübersicht "Reihenfolge bearbeiten".
-2. Die App zeigt nur die noch nicht gestarteten Spiele (Status
-   `geplant`) als anpassbar; bereits gestartete/beendete Spiele werden
-   unveränderbar angezeigt.
-3. Der Trainer ordnet die geplanten Spiele neu.
-4. Die App speichert die neue Reihenfolge.
+1. Die App zeigt neben jedem noch nicht gestarteten Spiel (Status
+   `geplant`) Auf-/Ab-Buttons; bereits gestartete/beendete Spiele haben
+   keine solchen Buttons und bleiben unveränderbar an ihrer Position
+   (native Drag-and-Drop-Geste entfällt, da auf iPhone Safari/Touch nicht
+   zuverlässig verfügbar, siehe NFR-2).
+2. Der Trainer verschiebt ein geplantes Spiel per Tap um eine Position
+   nach oben/unten – jeweils nur getauscht mit einem direkt benachbarten,
+   ebenfalls noch nicht gestarteten Spiel.
+3. Die App speichert die neue Reihenfolge sofort nach jedem Tap.
 
 **A3 – Abweichende Zusammenstellung wird bewusst akzeptiert (FR-25)**
 Sobald 6 Spiele erfasst sind (nach A1) und die Zusammenstellung nicht 3×

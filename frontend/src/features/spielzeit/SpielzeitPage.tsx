@@ -13,6 +13,7 @@ import {
   type Zuteilung,
 } from '../spiel-vorbereiten/spielVorbereitenApi'
 import {
+  alleEinwechseln,
   auswechseln,
   einwechseln,
   formatZeit,
@@ -166,6 +167,22 @@ export function SpielzeitPage() {
     }
   }
 
+  async function handleAlleEinwechseln() {
+    setAktionFehler(null)
+    const bankSpieler = zuteilung
+      .filter((z) => !einsaetze.some((e) => e.spieler_id === z.spieler_id && e.ausgewechselt_um === null))
+      .map((z) => ({ spielerId: z.spieler_id, feldId: z.feld_id }))
+
+    if (bankSpieler.length === 0) return
+
+    try {
+      await alleEinwechseln(bankSpieler)
+      await laden()
+    } catch {
+      setAktionFehler('Keine Verbindung – bitte erneut versuchen.')
+    }
+  }
+
   async function handleSpielBeenden() {
     const gibtAktive = einsaetze.some((e) => e.ausgewechselt_um === null)
     const hinweis = gibtAktive
@@ -228,6 +245,15 @@ export function SpielzeitPage() {
       )}
       {aktionFehler && (
         <p className="mb-4 text-sm text-red-600">{aktionFehler}</p>
+      )}
+
+      {!beendet && (
+        <button
+          onClick={handleAlleEinwechseln}
+          className="mb-4 rounded-md bg-slate-900 px-4 py-2 text-base font-medium text-white"
+        >
+          Alle einwechseln
+        </button>
       )}
 
       <div className="mb-6 grid gap-4 sm:grid-cols-2">

@@ -1,15 +1,21 @@
 # UC-04: Spiel vorbereiten
 
-**Abgedeckte Anforderungen:** FR-22, FR-24, FR-27
+**Abgedeckte Anforderungen:** FR-24, FR-27
 
 ## Kurzbeschreibung
 
-Vor Beginn eines Spiels erfasst der Trainer, welche Kaderspieler anwesend
-sind. Bei einem 3vs3-Spiel teilt er die anwesenden Spieler danach manuell
-auf die zwei Felder auf; bei einem 6vs6-Spiel entfällt dieser Schritt, da
-nur ein Feld existiert – alle anwesenden Spieler werden diesem automatisch
-zugeordnet. Erst nach Abschluss dieser Vorbereitung gilt das Spiel als
-bereit für die eigentliche Spielzeit-Erfassung (UC-05).
+Vor Beginn eines Spiels teilt der Trainer die für dieses Turnier bereits
+als anwesend erfassten Spieler (siehe UC-04a) auf die Felder des Spiels
+auf. Bei einem 3vs3-Spiel geschieht das manuell auf zwei Felder; bei einem
+6vs6-Spiel entfällt dieser Schritt, da nur ein Feld existiert – alle
+turnier-anwesenden Spieler werden diesem automatisch zugeordnet. Erst nach
+Abschluss dieser Zuteilung gilt das Spiel als bereit für die eigentliche
+Spielzeit-Erfassung (UC-05).
+
+Die Anwesenheit selbst wird **nicht** mehr hier, sondern einmalig pro
+Turnier erfasst (UC-04a) – ein Turniertag hat praktisch immer dieselben
+anwesenden Spieler über alle 6 Spiele hinweg, eine Wiederholung pro Spiel
+wäre reine Doppelarbeit.
 
 ## Primärer Akteur
 
@@ -20,13 +26,14 @@ Trainer
 - Der Trainer ist angemeldet (UC-01).
 - Ein Spiel mit Status `geplant` existiert innerhalb eines Turniers
   (UC-03), inklusive der zum Modus passenden Feld-Datensätze.
+- Für das Turnier ist mindestens ein Spieler als anwesend erfasst (UC-04a).
+  Ist das nicht der Fall, verweist die App auf die Anwesenheits-Erfassung
+  des Turniers, statt eine leere Zuteilung anzuzeigen.
 
 ## Nachbedingungen (Erfolg)
 
-- Für jeden aktiven Kaderspieler ist ein Anwesenheit-Datensatz für dieses
-  Spiel erfasst (anwesend = true/false).
-- Jeder anwesende Spieler ist genau einem Feld dieses Spiels zugeteilt
-  (bei 3vs3 manuell, bei 6vs6 automatisch).
+- Jeder turnier-anwesende Spieler ist genau einem Feld dieses Spiels
+  zugeteilt (bei 3vs3 manuell, bei 6vs6 automatisch).
 - Der Status des Spiels wechselt von `geplant` zu `laufend`.
 - Solange noch kein Einsatz-Datensatz für dieses Spiel existiert, bleibt
   eine Korrektur über A2 möglich (Status `laufend` allein blockiert das
@@ -36,56 +43,50 @@ Trainer
 
 1. Der Trainer wählt aus der Turnierübersicht ein Spiel mit Status
    `geplant`.
-2. Die App zeigt die Liste der aktiven Kaderspieler, jeweils mit einer
-   Markierung "anwesend".
-3. Der Trainer markiert alle anwesenden Spieler.
-4. Der Trainer bestätigt die Anwesenheit.
-5. Die App speichert für jeden aktiven Kaderspieler einen
-   Anwesenheit-Datensatz (FR-22).
-6. Da der Modus des Spiels 3vs3 ist, zeigt die App die anwesenden Spieler
-   zur Feldzuteilung (Feld A / Feld B).
-7. Der Trainer teilt jeden anwesenden Spieler manuell einem der zwei
-   Felder zu (FR-24).
-8. Der Trainer bestätigt die Zuteilung.
-9. Die App speichert die Zuteilung-Datensätze und setzt den Status des
+2. Die App zeigt die für dieses Turnier als anwesend erfassten Spieler
+   (UC-04a) zur Feldzuteilung (Feld A / Feld B).
+3. Der Trainer teilt jeden Spieler manuell einem der zwei Felder zu
+   (FR-24).
+4. Der Trainer bestätigt die Zuteilung.
+5. Die App speichert die Zuteilung-Datensätze und setzt den Status des
    Spiels auf `laufend`.
-10. Die App zeigt die Spielübersicht mit den zwei Feldern und den
-    zugeteilten Spielern – Ausgangspunkt für UC-05.
+6. Die App zeigt die Spielübersicht mit den zwei Feldern und den
+   zugeteilten Spielern – Ausgangspunkt für UC-05.
 
 ## Alternativabläufe
 
 **A1 – Spiel mit Modus 6vs6 (automatische Zuteilung)**
-Bei Schritt 6 des Basic Flow: Der Modus des Spiels ist 6vs6.
+Bei Schritt 2 des Basic Flow: Der Modus des Spiels ist 6vs6.
 1. Die App überspringt die manuelle Feldzuteilung.
-2. Die App erstellt automatisch für jeden anwesenden Spieler einen
+2. Die App erstellt automatisch für jeden turnier-anwesenden Spieler einen
    Zuteilung-Datensatz auf das eine vorhandene Feld.
 3. Die App setzt den Status des Spiels auf `laufend`.
-4. Weiter bei Schritt 10 des Basic Flow.
+4. Weiter bei Schritt 6 des Basic Flow.
 
-**A2 – Vorbereitung korrigieren (FR-27)**
+**A2 – Zuteilung korrigieren (FR-27)**
 Solange für dieses Spiel noch kein Einsatz-Datensatz existiert (auch wenn
-der Status bereits `laufend` ist), kann der Trainer zur Vorbereitung
+der Status bereits `laufend` ist), kann der Trainer zur Feldzuteilung
 zurückkehren:
-1. Der Trainer öffnet das Spiel erneut und wählt "Anwesenheit/Zuteilung
-   bearbeiten".
-2. Die App zeigt die bisherige Anwesenheit und Zuteilung vorausgefüllt.
-3. Der Trainer passt Anwesenheit und/oder Zuteilung an (z.B. Spieler
-   nachträglich als anwesend markieren, Feld wechseln).
+1. Der Trainer öffnet das Spiel erneut.
+2. Die App zeigt die bisherige Zuteilung vorausgefüllt.
+3. Der Trainer passt die Zuteilung an (z.B. Feld wechseln, neu als
+   anwesend erfassten Spieler zuteilen).
 4. Der Trainer bestätigt.
-5. Die App aktualisiert die betroffenen Datensätze entsprechend (bei
-   6vs6 wird die automatische Zuteilung für neu als anwesend markierte
-   Spieler entsprechend nachgeführt).
+5. Die App aktualisiert die Zuteilung-Datensätze entsprechend (bei 6vs6
+   wird die automatische Zuteilung für neu anwesende Spieler
+   entsprechend nachgeführt).
 
 ## Ausnahmeabläufe
 
-**E1 – Keine anwesenden Spieler markiert**
-Bei Schritt 4 des Basic Flow: Kein Spieler ist als anwesend markiert.
-1. Die App verhindert das Bestätigen und weist darauf hin, dass
-   mindestens ein Spieler anwesend sein muss.
+**E1 – Keine turnier-anwesenden Spieler**
+Bei Schritt 2 des Basic Flow: Für das Turnier ist noch keine Anwesenheit
+erfasst.
+1. Die App zeigt einen Hinweis mit Link zur Anwesenheits-Erfassung des
+   Turniers (UC-04a), statt eine leere Zuteilungsliste anzuzeigen.
 
 **E2 – Nicht alle anwesenden Spieler einem Feld zugeteilt (nur 3vs3)**
-Bei Schritt 8 des Basic Flow: Mindestens ein anwesender Spieler ist noch
-keinem Feld zugeteilt.
+Bei Schritt 4 des Basic Flow: Mindestens ein turnier-anwesender Spieler
+ist noch keinem Feld zugeteilt.
 1. Die App verhindert das Bestätigen und markiert die nicht zugeteilten
    Spieler.
 
@@ -98,18 +99,84 @@ Bei jedem Speichervorgang: Supabase nicht erreichbar.
 Bei Schritt 1 von A2: Für dieses Spiel existiert bereits mindestens ein
 Einsatz-Datensatz (mindestens eine Ein-/Auswechslung wurde bereits
 erfasst).
-1. Die App verhindert die Bearbeitung und weist darauf hin, dass das
-   Spiel bereits läuft und Anwesenheit/Zuteilung nicht mehr geändert
-   werden können.
+1. Die App verhindert die Bearbeitung der Feldzuteilung und weist darauf
+   hin, dass das Spiel bereits läuft. (Die Turnier-Anwesenheit selbst
+   bleibt davon unberührt änderbar, siehe UC-04a.)
 
 ## Testfälle
 
 | # | Szenario | Erwartetes Ergebnis |
 |---|---|---|
-| T1 | Bei einem 3vs3-Spiel 5 Spieler als anwesend markieren und auf Feld A/B verteilen | Anwesenheit und Zuteilung gespeichert, Status wechselt zu `laufend` (Basic Flow) |
-| T2 | Bei einem 6vs6-Spiel 8 Spieler als anwesend markieren | Anwesenheit gespeichert, alle 8 automatisch dem einen Feld zugeteilt, kein manueller Zuteilungsschritt sichtbar (A1) |
-| T3 | Anwesenheit bestätigen, ohne einen Spieler zu markieren | Bestätigen wird verhindert (E1) |
+| T1 | Bei einem 3vs3-Spiel 5 turnier-anwesende Spieler auf Feld A/B verteilen | Zuteilung gespeichert, Status wechselt zu `laufend` (Basic Flow) |
+| T2 | Bei einem 6vs6-Spiel mit 8 turnier-anwesenden Spielern öffnen | Alle 8 automatisch dem einen Feld zugeteilt, kein manueller Zuteilungsschritt sichtbar (A1) |
+| T3 | Spiel vorbereiten öffnen, bevor für das Turnier Anwesenheit erfasst wurde | Hinweis mit Link zur Anwesenheits-Erfassung statt leerer Liste (E1) |
 | T4 | Bei 3vs3 einen anwesenden Spieler keinem Feld zuteilen und bestätigen | Bestätigen wird verhindert, nicht zugeteilter Spieler markiert (E2) |
-| T5 | Nach abgeschlossener Vorbereitung (Status `laufend`, noch kein Einsatz) einen zusätzlichen Spieler als anwesend nachtragen | Anwesenheit wird aktualisiert, Spieler kann anschliessend einem Feld zugeteilt werden (A2) |
-| T6 | Vorbereitung bearbeiten, nachdem bereits ein Spieler ein-/ausgewechselt wurde | Bearbeitung wird verhindert, Hinweis auf laufendes Spiel (E4) |
-| T7 | Anwesenheit speichern ohne Netzwerkverbindung | Fehlermeldung, Eingabe bleibt erhalten (E3) |
+| T5 | Nach abgeschlossener Zuteilung (Status `laufend`, noch kein Einsatz) einen nachträglich als turnier-anwesend erfassten Spieler zuteilen | Zuteilung wird aktualisiert (A2) |
+| T6 | Zuteilung bearbeiten, nachdem bereits ein Spieler ein-/ausgewechselt wurde | Bearbeitung wird verhindert, Hinweis auf laufendes Spiel (E4) |
+| T7 | Zuteilung speichern ohne Netzwerkverbindung | Fehlermeldung, Eingabe bleibt erhalten (E3) |
+
+---
+
+# UC-04a: Turnier-Anwesenheit erfassen
+
+**Abgedeckte Anforderungen:** FR-22, FR-27
+
+## Kurzbeschreibung
+
+Der Trainer markiert, welche Kaderspieler an einem Turniertag anwesend
+sind. Diese Anwesenheit gilt für alle Spiele des Turniers und ist die
+Kandidatenliste für die Feldzuteilung in UC-04. Jederzeit nachträglich
+änderbar (z.B. Spieler kommt später dazu), unabhängig vom Status
+einzelner Spiele.
+
+## Primärer Akteur
+
+Trainer
+
+## Vorbedingungen
+
+- Der Trainer ist angemeldet (UC-01).
+- Ein Turnier existiert (UC-03).
+
+## Nachbedingungen (Erfolg)
+
+- Für jeden aktiven Kaderspieler ist ein Anwesenheit-Datensatz für dieses
+  Turnier erfasst (anwesend = true/false).
+
+## Hauptablauf (Basic Flow)
+
+1. Der Trainer öffnet ein Turnier und wählt "Anwesenheit".
+2. Die App zeigt die Liste der aktiven Kaderspieler, jeweils mit einer
+   Markierung "anwesend" (vorausgefüllt mit dem zuletzt gespeicherten
+   Stand, falls vorhanden).
+3. Der Trainer markiert die anwesenden Spieler.
+4. Der Trainer bestätigt.
+5. Die App speichert für jeden aktiven Kaderspieler einen
+   Anwesenheit-Datensatz für dieses Turnier (FR-22).
+
+## Alternativabläufe
+
+**A1 – Nachträglich korrigieren (FR-27)**
+1. Der Trainer öffnet die Anwesenheits-Erfassung erneut, jederzeit
+   während des Turniertags, unabhängig davon, ob bereits Spiele
+   `laufend`/`beendet` sind.
+2. Die App zeigt den zuletzt gespeicherten Stand vorausgefüllt.
+3. Der Trainer passt die Anwesenheit an.
+4. Der Trainer bestätigt; die Änderung wirkt sich auf die Feldzuteilung
+   noch nicht gestarteter Spiele aus (UC-04), bereits gestartete/beendete
+   Spiele bleiben unverändert.
+
+## Ausnahmeabläufe
+
+**E1 – Netzwerkfehler**
+Beim Speichern: Supabase nicht erreichbar.
+1. Die App zeigt eine Fehlermeldung, bisherige Eingaben bleiben erhalten,
+   der Trainer kann erneut speichern.
+
+## Testfälle
+
+| # | Szenario | Erwartetes Ergebnis |
+|---|---|---|
+| T1 | Anwesenheit für ein neues Turnier erfassen | Anwesenheit-Datensätze für alle aktiven Kaderspieler gespeichert (Basic Flow) |
+| T2 | Anwesenheit für ein Turnier nachträglich ändern, während ein Spiel bereits `beendet` ist | Änderung wird gespeichert, betrifft nur künftige Feldzuteilungen (A1) |
+| T3 | Anwesenheit speichern ohne Netzwerkverbindung | Fehlermeldung, Eingabe bleibt erhalten (E1) |

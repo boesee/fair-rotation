@@ -113,6 +113,25 @@ export async function addSpiel(turnierId: string, modus: Modus): Promise<Spiel> 
   return spiel
 }
 
+// UC-03/FR-26: vertauscht die Reihenfolge zweier noch nicht gestarteter
+// Spiele (Aufruf-Stelle stellt sicher, dass beide Status `geplant` haben).
+export async function tauscheReihenfolge(
+  a: { id: string; reihenfolge: number },
+  b: { id: string; reihenfolge: number },
+): Promise<void> {
+  const { error: aError } = await supabase
+    .from('spiel')
+    .update({ reihenfolge: b.reihenfolge })
+    .eq('id', a.id)
+  if (aError) throw aError
+
+  const { error: bError } = await supabase
+    .from('spiel')
+    .update({ reihenfolge: a.reihenfolge })
+    .eq('id', b.id)
+  if (bError) throw bError
+}
+
 // UC-03/A3 (FR-25): Warnung, wenn die Zusammenstellung von 3x 3vs3 + 3x
 // 6vs6 abweicht, sobald alle 6 Spiele erfasst sind. Kein Blocker.
 export function pruefeModusMix(spiele: Spiel[]): string | null {

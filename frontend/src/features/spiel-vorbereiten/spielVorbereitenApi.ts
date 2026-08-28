@@ -7,13 +7,6 @@ export interface Feld {
   created_at: string
 }
 
-export interface Anwesenheit {
-  id: string
-  spiel_id: string
-  spieler_id: string
-  anwesend: boolean
-}
-
 export interface Zuteilung {
   id: string
   feld_id: string
@@ -31,16 +24,6 @@ export async function listFelder(spielId: string): Promise<Feld[]> {
   return data
 }
 
-export async function listAnwesenheit(spielId: string): Promise<Anwesenheit[]> {
-  const { data, error } = await supabase
-    .from('anwesenheit')
-    .select('*')
-    .eq('spiel_id', spielId)
-
-  if (error) throw error
-  return data
-}
-
 export async function listZuteilung(feldIds: string[]): Promise<Zuteilung[]> {
   if (feldIds.length === 0) return []
   const { data, error } = await supabase
@@ -53,7 +36,7 @@ export async function listZuteilung(feldIds: string[]): Promise<Zuteilung[]> {
 }
 
 // UC-04/E4: solange kein Einsatz fuer eines der Felder dieses Spiels
-// existiert, darf die Vorbereitung (A2) noch bearbeitet werden.
+// existiert, darf die Zuteilung (A2) noch korrigiert werden.
 export async function hatEinsaetze(feldIds: string[]): Promise<boolean> {
   if (feldIds.length === 0) return false
   const { data, error } = await supabase
@@ -66,29 +49,16 @@ export async function hatEinsaetze(feldIds: string[]): Promise<boolean> {
   return data.length > 0
 }
 
-// Speichert Anwesenheit + Feldzuteilung in einem Schritt (vereinfacht
-// gegenueber dem Use-Case-Text, der zwei getrennte Bestaetigungen
-// beschreibt) und setzt das Spiel auf `laufend`. Bestehende Zuteilungen der
-// betroffenen Felder werden vorher geloescht und aus zuteilungMap neu
-// aufgebaut, damit A2 (Anwesenheit/Zuteilung korrigieren) keine doppelten
-// oder veralteten Zuteilung-Datensaetze hinterlaesst.
-export async function speichereVorbereitung(
+// Speichert die Feldzuteilung (Kandidaten sind die turnier-weit anwesenden
+// Spieler, siehe features/turnier/anwesenheitApi.ts) und setzt das Spiel auf
+// `laufend`. Bestehende Zuteilungen der betroffenen Felder werden vorher
+// geloescht und aus zuteilungMap neu aufgebaut, damit A2 (Zuteilung
+// korrigieren) keine doppelten oder veralteten Datensaetze hinterlaesst.
+export async function speichereZuteilung(
   spielId: string,
   feldIds: string[],
-  spielerIds: string[],
-  anwesenheitMap: Record<string, boolean>,
   zuteilungMap: Record<string, string>,
 ): Promise<void> {
-  const anwesenheitRows = spielerIds.map((spielerId) => ({
-    spiel_id: spielId,
-    spieler_id: spielerId,
-    anwesend: anwesenheitMap[spielerId] ?? false,
-  }))
-  const { error: anwesenheitError } = await supabase
-    .from('anwesenheit')
-    .upsert(anwesenheitRows, { onConflict: 'spiel_id,spieler_id' })
-  if (anwesenheitError) throw anwesenheitError
-
   if (feldIds.length > 0) {
     const { error: deleteError } = await supabase
       .from('zuteilung')

@@ -1,6 +1,6 @@
 # UC-05: Spielzeit erfassen
 
-**Abgedeckte Anforderungen:** FR-30, FR-31, FR-32, FR-33, FR-34, FR-35
+**Abgedeckte Anforderungen:** FR-30, FR-31, FR-32, FR-33, FR-34, FR-35, FR-36
 
 ## Kurzbeschreibung
 
@@ -75,6 +75,15 @@ Zuteilung nicht diesem, sondern dem anderen Feld zugeordnet (nur bei
 3. Bricht der Trainer ab: Kein Einsatz wird angelegt, Zuteilung bleibt
    unverändert.
 
+**A2b – Alle Bank-Spieler gleichzeitig einwechseln (FR-36)**
+Typischerweise zu Spielbeginn, alternativ zu wiederholtem Basic Flow:
+1. Der Trainer wählt "Alle einwechseln".
+2. Die App legt für jeden aktuell nicht aktiven, aber einem Feld
+   zugeteilten Spieler mit demselben Zeitstempel einen neuen
+   Einsatz-Datensatz an (`eingewechselt_um = jetzt`).
+3. Alle betroffenen Spieler erscheinen als aktiv, ihre Timer starten
+   gleichzeitig.
+
 **A3 – Spiel beenden (FR-35)**
 1. Der Trainer wählt in der Spielübersicht "Spiel beenden".
 2. Die App zeigt zur Sicherheit eine Bestätigung, insbesondere falls noch
@@ -124,3 +133,4 @@ den Status `beendet`.
 | T9 | Ein-/Auswechseln ohne Netzwerkverbindung | Fehlermeldung, UI-Zustand bleibt konsistent mit dem zuletzt bestätigten Stand (E2) |
 | T10 | Spiel mit 2 aktiven Spielern beenden | Beide offenen Einsätze werden geschlossen, Status wechselt zu `beendet` (A3) |
 | T11 | Nach Beenden eines Spiels versuchen, einen Spieler einzuwechseln | Aktion nicht mehr möglich (E3) |
+| T12 | Zu Spielbeginn "Alle einwechseln" bei 6 zugeteilten Bank-Spielern wählen | 6 neue Einsatz-Datensätze mit gleichem Zeitstempel, alle Timer starten gleichzeitig (A2b) |

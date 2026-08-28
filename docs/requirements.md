@@ -30,10 +30,10 @@ Entity-Modell und die Use-Case-Spezifikationen.
 | FR-20 | Der Trainer kann ein neues Turnier anlegen (Datum, Bezeichnung). Ein Turnier ist zunächst ein leerer Container – die 6 Spiele müssen nicht bei der Anlage im Voraus alle festgelegt werden. | Ziele: Turnier mit mehreren Spielen |
 | FR-21 | Der Trainer kann jederzeit während des Turniertags ein einzelnes Spiel mit Modus (3vs3 oder 6vs6) zum Turnier hinzufügen, bis maximal 6 Spiele erreicht sind. Die Reihenfolge ergibt sich aus dem Zeitpunkt des Hinzufügens (muss nicht vorab bekannt sein, z.B. bei Auslosung vor Ort). | Ziele: pro Spiel separate Erfassung, Flexibilität bei unbekannter Reihenfolge |
 | FR-26 | Der Trainer kann die Reihenfolge noch nicht gestarteter Spiele nachträglich anpassen (z.B. bei geänderter Auslosung). Bereits gestartete oder beendete Spiele sind davon ausgenommen. | Ziele: Flexibilität bei unbekannter Reihenfolge |
-| FR-22 | Der Trainer kann vor Spielbeginn aus dem Kader die anwesenden Spieler markieren. | Ziele: Anwesenheit erfassen |
+| FR-22 | Der Trainer kann für ein Turnier aus dem Kader die anwesenden Spieler markieren. Die Anwesenheit gilt turnierweit für alle Spiele dieses Turniers (keine erneute Erfassung pro Spiel nötig). | Ziele: Anwesenheit erfassen |
 | FR-23 | Jedes Spiel hat einen fest zugeordneten Modus (3vs3 oder 6vs6), der beim Anlegen des Turniers pro Spiel festgelegt wird. Die Feldanzahl ergibt sich automatisch aus dem Modus: 3vs3 → 2 Felder (Team wird gesplittet), 6vs6 → 1 Feld (ganzes Team). Keine freie Feld-Wahl durch den Trainer. | Ziele: Spielmodus 3vs3/6vs6 (SFV Play More Football) |
 | FR-24 | Bei einem 3vs3-Spiel teilt der Trainer jeden anwesenden Spieler manuell einem der zwei Felder zu (kein Automatik-Vorschlag). Bei einem 6vs6-Spiel entfällt dieser Schritt – alle anwesenden Spieler sind automatisch dem einen Feld zugeordnet. | Ziele: Feldzuteilung |
-| FR-27 | Der Trainer kann die Anwesenheit und Feldzuteilung eines Spiels korrigieren, solange noch keine Einsätze (Ein-/Auswechslungen) für dieses Spiel erfasst wurden. | Ziele: Anwesenheit erfassen |
+| FR-27 | Der Trainer kann die Turnier-Anwesenheit jederzeit korrigieren (unabhängig vom Status einzelner Spiele). Die Feldzuteilung eines einzelnen Spiels kann korrigiert werden, solange noch keine Einsätze (Ein-/Auswechslungen) für dieses Spiel erfasst wurden. | Ziele: Anwesenheit erfassen |
 | FR-25 | Weicht die Zusammensetzung eines Turniers von 3× 3vs3 + 3× 6vs6 ab, zeigt die App eine Warnung – das Speichern wird dadurch nicht blockiert. | Entity-Modell: Konsistenzregel |
 
 ### Spielzeit-Erfassung
@@ -46,6 +46,7 @@ Entity-Modell und die Use-Case-Spezifikationen.
 | FR-33 | Die Übersicht kennzeichnet erkennbar, welcher Spieler aktuell am längsten ununterbrochen auf dem Feld steht. | Mission |
 | FR-34 | Wechselt der Trainer einen Spieler auf ein Feld ein, dem er laut aktueller Zuteilung nicht zugeteilt ist (z.B. Verletzungsfall auf dem anderen Feld oder versehentliche Falscheinwechslung), zeigt die App eine kurze Bestätigung des Feldwechsels an. Bestätigt der Trainer, wird die Zuteilung auf das neue Feld aktualisiert; ist der Spieler aktuell aktiv auf dem ursprünglichen Feld, wird dessen laufender Einsatz zuvor automatisch beendet. | Ziele: Timer pro Spieler, Flexibilität bei Feldwechsel |
 | FR-35 | Der Trainer kann ein laufendes Spiel explizit als beendet markieren. Dabei werden alle noch offenen Einsätze automatisch geschlossen (Zeitpunkt der Markierung als Auswechselzeit). Der Status wechselt zu `beendet`; danach sind keine weiteren Ein-/Auswechslungen für dieses Spiel mehr möglich. | Ziele: Statistik nur auf Basis abgeschlossener Spiele |
+| FR-36 | Der Trainer kann zu Spielbeginn alle einem Feld zugeteilten Bank-Spieler mit einem Tap gleichzeitig einwechseln, statt jeden Spieler einzeln einwechseln zu müssen. Fachlich gleichbedeutend mit mehrfacher Anwendung von FR-30 zum selben Zeitpunkt. | Constraints: Bedienung unter Zeitdruck (NFR-1) |
 
 ### Statistik & Auswertung
 
@@ -53,7 +54,7 @@ Entity-Modell und die Use-Case-Spezifikationen.
 |---|---|---|
 | FR-40 | Der Trainer kann für ein einzelnes Turnier die kumulierte Spielzeit je Spieler einsehen, berechnet ausschliesslich aus Spielen mit Status `beendet` (laufende Spiele fliessen nicht ein). | Ziele: Statistik je Turnier |
 | FR-41 | Der Trainer kann turnierübergreifend die kumulierte Spielzeit je Spieler einsehen, berechnet ausschliesslich aus Spielen mit Status `beendet`. | Ziele: Statistik turnierübergreifend |
-| FR-42 | Der Trainer kann für jeden Spieler zwei getrennte Teilnahme-Kennzahlen einsehen: (a) Anzahl Spiele mit erfasster Anwesenheit, (b) Anzahl Spiele mit tatsächlicher Einsatzzeit (> 0). Aktuell sind beide Werte i.d.R. identisch (wer anwesend ist, spielt auch), das Modell hält sie aber bewusst getrennt für künftige Auswertungen (z.B. anwesend, aber nicht eingesetzt). | Ziele: Teilnahme-Statistik |
+| FR-42 | Der Trainer kann turnierübergreifend für jeden Spieler die Anzahl Turniere mit erfasster Anwesenheit einsehen. Eine zusätzliche Kennzahl auf Spiel-Ebene (Anzahl Spiele mit tatsächlicher Einsatzzeit) ist bewusst nicht Teil der Statistik-Ansicht – der Trainer hat dafür kein Bedürfnis geäussert, seit Anwesenheit turnierweit statt pro Spiel erfasst wird (FR-22). | Ziele: Teilnahme-Statistik |
 
 ## Nicht-funktionale Anforderungen
 

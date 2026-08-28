@@ -12,6 +12,7 @@ rectangle "Spielzeit-Rotation" {
   usecase "UC-01\nAnmelden" as UC01
   usecase "UC-02\nSpieler zum Kader\nverwalten" as UC02
   usecase "UC-03\nTurnier anlegen" as UC03
+  usecase "UC-04a\nTurnier-Anwesenheit\nerfassen" as UC04a
   usecase "UC-04\nSpiel vorbereiten" as UC04
   usecase "UC-05\nSpielzeit erfassen" as UC05
   usecase "UC-06\nStatistik einsehen" as UC06
@@ -20,17 +21,20 @@ rectangle "Spielzeit-Rotation" {
 Trainer --> UC01
 Trainer --> UC02
 Trainer --> UC03
+Trainer --> UC04a
 Trainer --> UC04
 Trainer --> UC05
 Trainer --> UC06
 
 UC02 ..> UC01 : <<include>>
 UC03 ..> UC01 : <<include>>
+UC04a ..> UC01 : <<include>>
 UC04 ..> UC01 : <<include>>
 UC05 ..> UC01 : <<include>>
 UC06 ..> UC01 : <<include>>
 
-UC04 ..> UC03 : <<precedes>>
+UC04a ..> UC03 : <<precedes>>
+UC04 ..> UC04a : <<precedes>>
 UC05 ..> UC04 : <<precedes>>
 UC06 ..> UC05 : <<precedes>>
 
@@ -50,6 +54,12 @@ note bottom of UC03
   Turnier = Container für bis zu
   6 Spiele, flexibel erfassbar
   (FR-20/21/25/26).
+end note
+
+note bottom of UC04a
+  Gilt turnierweit für alle
+  Spiele (FR-22); jederzeit
+  nachträglich änderbar (FR-27).
 end note
 
 note bottom of UC04

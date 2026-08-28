@@ -71,8 +71,9 @@ export function StatistikPage() {
               <tr className="border-b border-slate-200 text-left text-slate-500">
                 <th className="px-4 py-2 font-medium">Spieler</th>
                 <th className="px-4 py-2 font-medium">Spielzeit</th>
-                <th className="px-4 py-2 font-medium">Anwesend</th>
-                <th className="px-4 py-2 font-medium">Eingesetzt</th>
+                {!turnier && (
+                  <th className="px-4 py-2 font-medium">Turniere anwesend</th>
+                )}
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-200">
@@ -80,8 +81,9 @@ export function StatistikPage() {
                 <tr key={s.spielerId}>
                   <td className="px-4 py-2">{s.name}</td>
                   <td className="px-4 py-2">{formatZeit(s.kumulierteSekunden)}</td>
-                  <td className="px-4 py-2">{s.anzahlAnwesend}</td>
-                  <td className="px-4 py-2">{s.anzahlEingesetzt}</td>
+                  {!turnier && (
+                    <td className="px-4 py-2">{s.anzahlTurniereAnwesend}</td>
+                  )}
                 </tr>
               ))}
             </tbody>

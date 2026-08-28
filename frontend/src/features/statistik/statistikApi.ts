@@ -1,14 +1,15 @@
 import { supabase } from '../../lib/supabaseClient'
 import { listAlleSpieler } from '../kader/kaderApi'
-import type { Anwesenheit, Feld } from '../spiel-vorbereiten/spielVorbereitenApi'
+import type { Feld } from '../spiel-vorbereiten/spielVorbereitenApi'
 import { listEinsaetze } from '../spielzeit/spielzeitApi'
 
 export interface SpielerStatistik {
   spielerId: string
   name: string
   kumulierteSekunden: number
-  anzahlAnwesend: number
-  anzahlEingesetzt: number
+  // Nur bei der turnieruebergreifenden Ansicht (turnierId nicht gesetzt)
+  // ermittelt, sonst 0 (ohne fachliche Bedeutung fuer ein einzelnes Turnier).
+  anzahlTurniereAnwesend: number
 }
 
 async function listBeendeteSpielIds(turnierId?: string): Promise<string[]> {
@@ -31,41 +32,49 @@ async function listFelderFuerSpiele(spielIds: string[]): Promise<Feld[]> {
   return data
 }
 
-async function listAnwesenheitFuerSpiele(
-  spielIds: string[],
-): Promise<Anwesenheit[]> {
-  if (spielIds.length === 0) return []
+// FR-42a (vereinfacht, siehe UC-06-Notiz): zaehlt Turniere mit Anwesenheit,
+// unabhaengig vom Spiel-Status, da Anwesenheit turnier-weit erfasst wird
+// (features/turnier/anwesenheitApi.ts) und kein reines Spiel-Ergebnis ist.
+async function zaehleTurniereProSpieler(): Promise<Map<string, number>> {
   const { data, error } = await supabase
     .from('anwesenheit')
-    .select('*')
-    .in('spiel_id', spielIds)
+    .select('spieler_id, turnier_id')
     .eq('anwesend', true)
-
   if (error) throw error
-  return data
+
+  const turniereProSpieler = new Map<string, Set<string>>()
+  data.forEach((row) => {
+    const turniere = turniereProSpieler.get(row.spieler_id) ?? new Set<string>()
+    turniere.add(row.turnier_id)
+    turniereProSpieler.set(row.spieler_id, turniere)
+  })
+
+  return new Map(
+    [...turniereProSpieler].map(([spielerId, turniere]) => [
+      spielerId,
+      turniere.size,
+    ]),
+  )
 }
 
-// UC-06 (FR-40/41/42): aggregiert kumulierte Spielzeit und
-// Teilnahme-Kennzahlen ausschliesslich auf Basis beendeter Spiele.
-// turnierId gesetzt -> Basic Flow (ein Turnier), sonst A1 (turnierübergreifend).
+// UC-06 (FR-40/41): aggregiert kumulierte Spielzeit ausschliesslich auf
+// Basis beendeter Spiele. turnierId gesetzt -> Basic Flow (ein Turnier),
+// sonst A1 (turnieruebergreifend, inkl. Anzahl Turniere mit Anwesenheit).
 export async function berechneStatistik(
   turnierId?: string,
 ): Promise<SpielerStatistik[]> {
   const spielIds = await listBeendeteSpielIds(turnierId)
-  if (spielIds.length === 0) return []
 
-  const [alleSpieler, felder, anwesenheit] = await Promise.all([
+  const [alleSpieler, felder, anwesenheitZaehlung] = await Promise.all([
     listAlleSpieler(),
     listFelderFuerSpiele(spielIds),
-    listAnwesenheitFuerSpiele(spielIds),
+    turnierId ? Promise.resolve(new Map<string, number>()) : zaehleTurniereProSpieler(),
   ])
   const feldIds = felder.map((f) => f.id)
   const einsaetze = await listEinsaetze(feldIds)
-  const feldIdZuSpielId = new Map(felder.map((f) => [f.id, f.spiel_id]))
 
   return alleSpieler
     .map((s) => {
-      const eigeneAnwesenheit = anwesenheit.filter((a) => a.spieler_id === s.id)
       const eigeneEinsaetze = einsaetze.filter(
         (e) => e.spieler_id === s.id && e.ausgewechselt_um !== null,
       )
@@ -77,21 +86,14 @@ export async function berechneStatistik(
             1000,
         0,
       )
-      const spieleMitEinsatz = new Set(
-        eigeneEinsaetze.map((e) => feldIdZuSpielId.get(e.feld_id)),
-      )
 
       return {
         spielerId: s.id,
         name: s.vorname + (s.nachname_initiale ? ` ${s.nachname_initiale}.` : ''),
         kumulierteSekunden,
-        anzahlAnwesend: eigeneAnwesenheit.length,
-        anzahlEingesetzt: spieleMitEinsatz.size,
+        anzahlTurniereAnwesend: anwesenheitZaehlung.get(s.id) ?? 0,
       }
     })
-    .filter(
-      (s) =>
-        s.anzahlAnwesend > 0 || s.anzahlEingesetzt > 0 || s.kumulierteSekunden > 0,
-    )
+    .filter((s) => s.kumulierteSekunden > 0 || s.anzahlTurniereAnwesend > 0)
     .sort((a, b) => b.kumulierteSekunden - a.kumulierteSekunden)
 }

@@ -51,18 +51,22 @@ automatisch erzeugt, keine manuelle Feld-Erstellung durch den Trainer).
 | bezeichnung | text | "Feld A" / "Feld B" bei 3vs3, "Feld" bei 6vs6 |
 
 ### Anwesenheit
-Verknüpft Spieler × Spiel: wer ist bei diesem Spiel dabei (FR-22).
-Getrennt von der Feldzuteilung, weil Anwesenheit vor der Zuteilung erfasst
-wird und bei 6vs6 keine Zuteilung nötig ist.
+Verknüpft Spieler × **Turnier** (nicht Spiel): wer ist an diesem
+Turniertag dabei (FR-22). Bewusst turnier- statt spielbezogen, da die
+Anwesenheit an einem Turniertag praktisch über alle 6 Spiele hinweg
+konstant ist – wiederholte Erfassung pro Spiel wäre reine Doppelarbeit.
+Jederzeit nachträglich änderbar, unabhängig vom Status einzelner Spiele
+(FR-27). Getrennt von der Feldzuteilung, weil Zuteilung pro Spiel erfolgt
+und bei 6vs6 keine manuelle Zuteilung nötig ist.
 
 | Attribut | Typ | Beschreibung |
 |---|---|---|
 | id | UUID | Primärschlüssel |
-| spiel_id | FK → Spiel | |
+| turnier_id | FK → Turnier | |
 | spieler_id | FK → Spieler | |
 | anwesend | boolean | |
 
-*Unique Constraint: (spiel_id, spieler_id) – ein Spieler ist pro Spiel
+*Unique Constraint: (turnier_id, spieler_id) – ein Spieler ist pro Turnier
 höchstens einmal erfasst.*
 
 ### Zuteilung
@@ -106,17 +110,16 @@ einwechselbar) → 1:n-Beziehung, keine einzelne Zeitspanne pro Spieler/Feld.
 ## Beziehungsdiagramm (Übersicht)
 
 ```
-Turnier 1──6 Spiel 1──1..2 Feld 1──n Zuteilung n──1 Spieler
-                  │                    │
-                  │                    │
-                  1──n Anwesenheit n──1┘
-                  │
-                  1
-                  │
-              (über Feld)
-                  │
-                  n
-               Einsatz n──1 Spieler
+Turnier 1──n Anwesenheit n──1 Spieler
+   │
+   1──6 Spiel 1──1..2 Feld 1──n Zuteilung n──1 Spieler
+                       │
+                       1
+                       │
+                   (über Feld)
+                       │
+                       n
+                    Einsatz n──1 Spieler
 ```
 
 ## Bestätigte Entscheidungen (vormals offene Fragen)

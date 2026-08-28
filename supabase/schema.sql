@@ -86,13 +86,18 @@ create policy "authenticated full access" on public.feld
 -- ---------------------------------------------------------------------
 -- anwesenheit
 -- ---------------------------------------------------------------------
+-- Turnier-bezogen, nicht spiel-bezogen: an einem Turniertag ist die
+-- Anwesenheit i.d.R. ueber alle Spiele hinweg gleich, daher wird sie einmal
+-- pro Turnier erfasst (jederzeit nachtraeglich aenderbar) statt pro Spiel
+-- wiederholt. Die Feldzuteilung (siehe zuteilung) waehlt pro Spiel aus
+-- dieser Turnier-weiten Liste aus.
 create table public.anwesenheit (
   id          uuid primary key default gen_random_uuid(),
-  spiel_id    uuid not null references public.spiel(id) on delete cascade,
+  turnier_id  uuid not null references public.turnier(id) on delete cascade,
   spieler_id  uuid not null references public.spieler(id) on delete restrict,
   anwesend    boolean not null,
   created_at  timestamptz not null default now(),
-  unique (spiel_id, spieler_id)
+  unique (turnier_id, spieler_id)
 );
 
 alter table public.anwesenheit enable row level security;

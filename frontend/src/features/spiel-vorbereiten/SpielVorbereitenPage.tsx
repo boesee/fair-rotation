@@ -1,13 +1,13 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
-import { listSpieler, type Spieler } from '../kader/kaderApi'
+import { listSpielerByIds, type Spieler } from '../kader/kaderApi'
+import { listAnwesendeSpielerIds } from '../turnier/anwesenheitApi'
 import { getSpielMitTurnier, type Spiel, type Turnier } from '../turnier/turnierApi'
 import {
   hatEinsaetze,
-  listAnwesenheit,
   listFelder,
   listZuteilung,
-  speichereVorbereitung,
+  speichereZuteilung,
   type Feld,
 } from './spielVorbereitenApi'
 
@@ -19,13 +19,11 @@ export function SpielVorbereitenPage() {
     null,
   )
   const [felder, setFelder] = useState<Feld[]>([])
-  const [kader, setKader] = useState<Spieler[]>([])
+  const [anwesende, setAnwesende] = useState<Spieler[]>([])
   const [gesperrt, setGesperrt] = useState(false)
-  const [anwesenheitMap, setAnwesenheitMap] = useState<Record<string, boolean>>({})
   const [zuteilungMap, setZuteilungMap] = useState<Record<string, string>>({})
 
   const [ladeFehler, setLadeFehler] = useState<string | null>(null)
-  const [anwesenheitFehlt, setAnwesenheitFehlt] = useState(false)
   const [zuteilungFehlt, setZuteilungFehlt] = useState<Set<string>>(new Set())
   const [speicherFehler, setSpeicherFehler] = useState<string | null>(null)
 
@@ -35,25 +33,19 @@ export function SpielVorbereitenPage() {
       const d = await getSpielMitTurnier(spielId)
       const f = await listFelder(spielId)
       const feldIds = f.map((x) => x.id)
-      const [k, anwesenheitRows, zuteilungRows, einsatzVorhanden] =
-        await Promise.all([
-          listSpieler(true),
-          listAnwesenheit(spielId),
-          listZuteilung(feldIds),
-          hatEinsaetze(feldIds),
-        ])
+      const [anwesendeIds, zuteilungRows, einsatzVorhanden] = await Promise.all([
+        listAnwesendeSpielerIds(d.turnier.id),
+        listZuteilung(feldIds),
+        hatEinsaetze(feldIds),
+      ])
+      const anwesendeSpieler = await listSpielerByIds(anwesendeIds)
 
       setDaten(d)
       setFelder(f)
-      setKader(k)
+      setAnwesende(
+        anwesendeSpieler.sort((a, b) => a.vorname.localeCompare(b.vorname)),
+      )
       setGesperrt(einsatzVorhanden)
-
-      const aMap: Record<string, boolean> = {}
-      k.forEach((s) => {
-        aMap[s.id] =
-          anwesenheitRows.find((r) => r.spieler_id === s.id)?.anwesend ?? false
-      })
-      setAnwesenheitMap(aMap)
 
       const zMap: Record<string, string> = {}
       zuteilungRows.forEach((z) => {
@@ -72,10 +64,6 @@ export function SpielVorbereitenPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [spielId])
 
-  function toggleAnwesend(spielerId: string) {
-    setAnwesenheitMap((m) => ({ ...m, [spielerId]: !m[spielerId] }))
-  }
-
   function setZuteilung(spielerId: string, feldId: string) {
     setZuteilungMap((m) => ({ ...m, [spielerId]: feldId }))
   }
@@ -83,16 +71,7 @@ export function SpielVorbereitenPage() {
   async function handleSpeichern() {
     if (!spielId || !daten) return
     setSpeicherFehler(null)
-    setAnwesenheitFehlt(false)
     setZuteilungFehlt(new Set())
-
-    const anwesende = kader.filter((s) => anwesenheitMap[s.id])
-
-    // UC-04/E1
-    if (anwesende.length === 0) {
-      setAnwesenheitFehlt(true)
-      return
-    }
 
     let zuteilung: Record<string, string> = {}
     if (daten.spiel.modus === '3vs3') {
@@ -114,13 +93,7 @@ export function SpielVorbereitenPage() {
     }
 
     try {
-      await speichereVorbereitung(
-        spielId,
-        felder.map((f) => f.id),
-        kader.map((s) => s.id),
-        anwesenheitMap,
-        zuteilung,
-      )
+      await speichereZuteilung(spielId, felder.map((f) => f.id), zuteilung)
       await laden()
     } catch {
       setSpeicherFehler('Keine Verbindung – bitte erneut versuchen.')
@@ -132,7 +105,6 @@ export function SpielVorbereitenPage() {
 
   const { spiel, turnier } = daten
   const ist3vs3 = spiel.modus === '3vs3'
-  const anwesendeAnzahl = kader.filter((s) => anwesenheitMap[s.id]).length
 
   return (
     <div>
@@ -149,84 +121,78 @@ export function SpielVorbereitenPage() {
         {spiel.modus} · Status: {spiel.status}
       </p>
 
-      {gesperrt && (
-        <p className="mb-4 rounded-md bg-amber-50 px-3 py-2 text-sm text-amber-700">
-          Das Spiel läuft bereits – Anwesenheit und Zuteilung können nicht
-          mehr geändert werden.
+      {anwesende.length === 0 && (
+        <p className="mb-4 rounded-lg bg-white p-4 text-sm text-slate-600 shadow-sm">
+          Für dieses Turnier ist noch keine Anwesenheit erfasst.{' '}
+          <Link
+            to={`/turniere/${turnier.id}/anwesenheit`}
+            className="font-medium text-slate-900 underline"
+          >
+            Jetzt erfassen
+          </Link>
         </p>
       )}
 
-      <ul className="mb-6 divide-y divide-slate-200 rounded-lg bg-white shadow-sm">
-        {kader.map((s) => {
-          const anwesend = anwesenheitMap[s.id] ?? false
-          const braucht = zuteilungFehlt.has(s.id)
-          return (
-            <li key={s.id} className="flex flex-col gap-2 px-4 py-3">
-              <label className="flex items-center gap-3">
-                <input
-                  type="checkbox"
-                  checked={anwesend}
-                  disabled={gesperrt}
-                  onChange={() => toggleAnwesend(s.id)}
-                  className="h-5 w-5"
-                />
+      {gesperrt && (
+        <p className="mb-4 rounded-md bg-amber-50 px-3 py-2 text-sm text-amber-700">
+          Das Spiel läuft bereits – die Feldzuteilung kann nicht mehr
+          geändert werden.
+        </p>
+      )}
+
+      {anwesende.length > 0 && (
+        <ul className="mb-6 divide-y divide-slate-200 rounded-lg bg-white shadow-sm">
+          {anwesende.map((s) => {
+            const braucht = zuteilungFehlt.has(s.id)
+            return (
+              <li key={s.id} className="flex flex-col gap-2 px-4 py-3">
                 <span>
                   {s.vorname}
                   {s.nachname_initiale ? ` ${s.nachname_initiale}.` : ''}
                 </span>
-              </label>
 
-              {ist3vs3 && anwesend && (
-                <div className="ml-8 flex items-center gap-2">
-                  {felder.map((f) => (
-                    <button
-                      key={f.id}
-                      type="button"
-                      disabled={gesperrt}
-                      onClick={() => setZuteilung(s.id, f.id)}
-                      className={`rounded-md border px-3 py-1 text-sm ${
-                        zuteilungMap[s.id] === f.id
-                          ? 'border-slate-900 bg-slate-900 text-white'
-                          : 'border-slate-300 text-slate-700'
-                      }`}
-                    >
-                      {f.bezeichnung}
-                    </button>
-                  ))}
-                  {braucht && (
-                    <span className="text-sm text-red-600">Feld wählen</span>
-                  )}
-                </div>
-              )}
-            </li>
-          )
-        })}
-        {kader.length === 0 && (
-          <li className="px-4 py-3 text-sm text-slate-500">
-            Keine aktiven Spieler im Kader.
-          </li>
-        )}
-      </ul>
-
-      {anwesenheitFehlt && (
-        <p className="mb-4 text-sm text-red-600">
-          Mindestens ein Spieler muss als anwesend markiert sein.
-        </p>
+                {ist3vs3 && (
+                  <div className="flex items-center gap-2">
+                    {felder.map((f) => (
+                      <button
+                        key={f.id}
+                        type="button"
+                        disabled={gesperrt}
+                        onClick={() => setZuteilung(s.id, f.id)}
+                        className={`rounded-md border px-3 py-1 text-sm ${
+                          zuteilungMap[s.id] === f.id
+                            ? 'border-slate-900 bg-slate-900 text-white'
+                            : 'border-slate-300 text-slate-700'
+                        }`}
+                      >
+                        {f.bezeichnung}
+                      </button>
+                    ))}
+                    {braucht && (
+                      <span className="text-sm text-red-600">Feld wählen</span>
+                    )}
+                  </div>
+                )}
+              </li>
+            )
+          })}
+        </ul>
       )}
+
       {speicherFehler && (
         <p className="mb-4 text-sm text-red-600">{speicherFehler}</p>
       )}
 
-      {!gesperrt && (
+      {!gesperrt && anwesende.length > 0 && (
         <button
           onClick={handleSpeichern}
           className="rounded-md bg-slate-900 px-4 py-2 text-base font-medium text-white"
         >
-          Anwesenheit &amp; Zuteilung speichern
+          Zuteilung speichern
         </button>
       )}
 
-      {(gesperrt || spiel.status === 'laufend') && anwesendeAnzahl > 0 && (
+      {(gesperrt || spiel.status === 'laufend') && (
         <button
           onClick={() => navigate(`/spiele/${spiel.id}/spielzeit`)}
           className="ml-2 rounded-md border border-slate-300 px-4 py-2 text-base font-medium text-slate-700"

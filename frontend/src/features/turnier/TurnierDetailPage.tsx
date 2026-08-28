@@ -6,6 +6,7 @@ import {
   getTurnier,
   listSpiele,
   pruefeModusMix,
+  tauscheReihenfolge,
   type Modus,
   type Spiel,
   type Turnier,
@@ -54,6 +55,25 @@ export function TurnierDetailPage() {
     }
   }
 
+  // UC-03/FR-26: Reihenfolge nur unter direkt benachbarten, noch nicht
+  // gestarteten Spielen tauschbar – laeuft/beendet bleiben fix an ihrer
+  // Position, damit kein geplantes Spiel an einem bereits gespielten
+  // vorbeigezogen wird.
+  async function handleVerschieben(index: number, richtung: -1 | 1) {
+    const nachbarIndex = index + richtung
+    const spiel = spiele[index]
+    const nachbar = spiele[nachbarIndex]
+    if (!spiel || !nachbar) return
+
+    try {
+      await tauscheReihenfolge(spiel, nachbar)
+      setFehler(null)
+      await laden()
+    } catch {
+      setFehler('Keine Verbindung – bitte erneut versuchen.')
+    }
+  }
+
   if (!turnier) {
     return fehler ? (
       <p className="text-sm text-red-600">{fehler}</p>
@@ -78,12 +98,20 @@ export function TurnierDetailPage() {
         erfasst
       </p>
 
-      <Link
-        to={`/turniere/${turnier.id}/statistik`}
-        className="mb-4 inline-block text-sm font-medium text-slate-700 underline"
-      >
-        Statistik
-      </Link>
+      <div className="mb-4 flex gap-4">
+        <Link
+          to={`/turniere/${turnier.id}/anwesenheit`}
+          className="text-sm font-medium text-slate-700 underline"
+        >
+          Anwesenheit
+        </Link>
+        <Link
+          to={`/turniere/${turnier.id}/statistik`}
+          className="text-sm font-medium text-slate-700 underline"
+        >
+          Statistik
+        </Link>
+      </div>
 
       {mixWarnung && (
         <p className="mb-4 rounded-md bg-amber-50 px-3 py-2 text-sm text-amber-700">
@@ -92,15 +120,42 @@ export function TurnierDetailPage() {
       )}
 
       <ul className="mb-6 divide-y divide-slate-200 rounded-lg bg-white shadow-sm">
-        {spiele.map((s) => (
-          <li key={s.id} className="flex items-center justify-between px-4 py-3">
-            <div>
-              <span className="font-medium">Spiel {s.reihenfolge}</span>{' '}
-              <span className="text-sm text-slate-500">
-                {s.modus} · {s.status}
-              </span>
-            </div>
-            <div className="flex items-center gap-3">
+        {spiele.map((s, index) => {
+          const kannHoch = s.status === 'geplant' && spiele[index - 1]?.status === 'geplant'
+          const kannRunter = s.status === 'geplant' && spiele[index + 1]?.status === 'geplant'
+
+          return (
+            <li key={s.id} className="flex items-center justify-between px-4 py-3">
+              <div className="flex items-center gap-2">
+                {s.status === 'geplant' && (
+                  <div className="flex flex-col">
+                    <button
+                      type="button"
+                      onClick={() => handleVerschieben(index, -1)}
+                      disabled={!kannHoch}
+                      title="Nach oben"
+                      className="leading-none text-slate-500 disabled:opacity-20"
+                    >
+                      ▲
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleVerschieben(index, 1)}
+                      disabled={!kannRunter}
+                      title="Nach unten"
+                      className="leading-none text-slate-500 disabled:opacity-20"
+                    >
+                      ▼
+                    </button>
+                  </div>
+                )}
+                <div>
+                  <span className="font-medium">Spiel {s.reihenfolge}</span>{' '}
+                  <span className="text-sm text-slate-500">
+                    {s.modus} · {s.status}
+                  </span>
+                </div>
+              </div>
               <Link
                 to={
                   s.status === 'geplant'
@@ -111,30 +166,15 @@ export function TurnierDetailPage() {
               >
                 Öffnen
               </Link>
-              {/* UC-03/A2, A4: Reihenfolge-Bearbeitung und Loeschen sind in
-                  diesem Schritt bewusst noch nicht umgesetzt. */}
-              <span
-                title="Kommt in einem späteren Schritt"
-                className="cursor-not-allowed text-sm text-slate-300"
-              >
-                Löschen
-              </span>
-            </div>
-          </li>
-        ))}
+            </li>
+          )
+        })}
         {spiele.length === 0 && (
           <li className="px-4 py-3 text-sm text-slate-500">
             Noch keine Spiele erfasst.
           </li>
         )}
       </ul>
-
-      <span
-        title="Kommt in einem späteren Schritt"
-        className="mb-4 inline-block cursor-not-allowed text-sm text-slate-300"
-      >
-        Reihenfolge bearbeiten
-      </span>
 
       <div className="flex flex-wrap items-center gap-2 rounded-lg bg-white p-4 shadow-sm">
         <select

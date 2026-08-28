@@ -69,6 +69,25 @@ export async function einwechseln(
   if (insertError) throw insertError
 }
 
+// Startet alle Bank-Spieler eines Spiels gleichzeitig (typischerweise zu
+// Spielbeginn statt jeden Spieler einzeln einzuwechseln). spielerIds sind
+// die noch nicht aktiven, aber einem Feld zugeteilten Spieler.
+export async function alleEinwechseln(
+  eintraege: { spielerId: string; feldId: string }[],
+): Promise<void> {
+  if (eintraege.length === 0) return
+  const jetzt = new Date().toISOString()
+
+  const { error } = await supabase.from('einsatz').insert(
+    eintraege.map(({ spielerId, feldId }) => ({
+      feld_id: feldId,
+      spieler_id: spielerId,
+      eingewechselt_um: jetzt,
+    })),
+  )
+  if (error) throw error
+}
+
 // UC-05/A1 (FR-31)
 export async function auswechseln(einsatzId: string): Promise<void> {
   const { error } = await supabase
