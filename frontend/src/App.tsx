@@ -70,6 +70,14 @@ export default function App() {
             }
           />
           <Route
+            path="/turniere/:turnierId/statistik"
+            element={
+              <GeschuetzterBereich>
+                <StatistikPage />
+              </GeschuetzterBereich>
+            }
+          />
+          <Route
             path="/spiele/:spielId/vorbereiten"
             element={
               <GeschuetzterBereich>

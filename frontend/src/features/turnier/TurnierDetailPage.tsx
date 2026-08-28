@@ -78,6 +78,13 @@ export function TurnierDetailPage() {
         erfasst
       </p>
 
+      <Link
+        to={`/turniere/${turnier.id}/statistik`}
+        className="mb-4 inline-block text-sm font-medium text-slate-700 underline"
+      >
+        Statistik
+      </Link>
+
       {mixWarnung && (
         <p className="mb-4 rounded-md bg-amber-50 px-3 py-2 text-sm text-amber-700">
           {mixWarnung}
@@ -95,7 +102,11 @@ export function TurnierDetailPage() {
             </div>
             <div className="flex items-center gap-3">
               <Link
-                to={`/spiele/${s.id}/vorbereiten`}
+                to={
+                  s.status === 'geplant'
+                    ? `/spiele/${s.id}/vorbereiten`
+                    : `/spiele/${s.id}/spielzeit`
+                }
                 className="text-sm font-medium text-slate-700"
               >
                 Öffnen

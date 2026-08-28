@@ -19,6 +19,20 @@ export async function listSpieler(aktiv: boolean): Promise<Spieler[]> {
   return data
 }
 
+// UC-06: Statistik beruecksichtigt auch deaktivierte Spieler mit Historie.
+export async function listAlleSpieler(): Promise<Spieler[]> {
+  const { data, error } = await supabase.from('spieler').select('*').order('vorname')
+  if (error) throw error
+  return data
+}
+
+export async function listSpielerByIds(ids: string[]): Promise<Spieler[]> {
+  if (ids.length === 0) return []
+  const { data, error } = await supabase.from('spieler').select('*').in('id', ids)
+  if (error) throw error
+  return data
+}
+
 export async function addSpieler(
   vorname: string,
   nachnameInitiale: string | null,
