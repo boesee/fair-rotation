@@ -1,5 +1,7 @@
+import { useEffect } from 'react'
 import { HashRouter, Navigate, Route, Routes } from 'react-router-dom'
 import { AuthProvider } from './features/auth/AuthContext'
+import { ermittleTheme, setzeTheme } from './lib/theme'
 import { LoginPage } from './features/auth/LoginPage'
 import { RequireAuth } from './components/RequireAuth'
 import { Layout } from './components/Layout'
@@ -14,10 +16,10 @@ import { StatistikPage } from './features/statistik/StatistikPage'
 function HauptUebersicht() {
   return (
     <div>
-      <h1 className="mb-2 text-lg font-semibold text-slate-900">
+      <h1 className="mb-2 text-lg font-semibold text-slate-900 dark:text-slate-100">
         Spielzeit-Rotation
       </h1>
-      <p className="text-sm text-slate-600">
+      <p className="text-sm text-slate-600 dark:text-slate-400">
         Kader, Turniere und Statistik über die Navigation oben erreichbar.
       </p>
     </div>
@@ -33,6 +35,10 @@ function GeschuetzterBereich({ children }: { children: React.ReactNode }) {
 }
 
 export default function App() {
+  useEffect(() => {
+    setzeTheme(ermittleTheme())
+  }, [])
+
   return (
     <AuthProvider>
       <HashRouter>

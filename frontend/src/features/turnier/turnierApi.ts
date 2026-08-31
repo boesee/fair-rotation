@@ -7,6 +7,7 @@ export interface Turnier {
   id: string
   datum: string
   bezeichnung: string
+  ist_test: boolean
   created_at: string
 }
 
@@ -34,15 +35,24 @@ export async function listTurniere(): Promise<Turnier[]> {
 export async function createTurnier(
   datum: string,
   bezeichnung: string,
+  istTest: boolean,
 ): Promise<Turnier> {
   const { data, error } = await supabase
     .from('turnier')
-    .insert({ datum, bezeichnung })
+    .insert({ datum, bezeichnung, ist_test: istTest })
     .select()
     .single()
 
   if (error) throw error
   return data
+}
+
+// FR-28: nur fuer Test-Turniere zugaenglich (siehe TurnierDetailPage) – loescht
+// per on-delete-cascade in supabase/schema.sql auch alle Spiele, Felder,
+// Zuteilungen, Einsaetze und die Turnier-Anwesenheit in einem Request.
+export async function loescheTurnier(id: string): Promise<void> {
+  const { error } = await supabase.from('turnier').delete().eq('id', id)
+  if (error) throw error
 }
 
 export async function getTurnier(id: string): Promise<Turnier> {

@@ -33,6 +33,10 @@ create table public.turnier (
   id           uuid primary key default gen_random_uuid(),
   datum        date not null,
   bezeichnung  text not null,
+  -- FR-28: markiert Test-Turniere, die ueber die UI komplett (inkl. Spiele/
+  -- Zuteilungen/Einsaetze/Anwesenheit, per on-delete-cascade) geloescht
+  -- werden duerfen. Echte Turniere sind ohne diese Markierung geschuetzt.
+  ist_test     boolean not null default false,
   created_at   timestamptz not null default now()
 );
 

@@ -1,1 +1,8 @@
 @import "tailwindcss";
+
+/* Manueller Dark-Mode-Switch statt reiner OS-Praeferenz (prefers-color-scheme) */
+@custom-variant dark (&:where(.dark, .dark *));
+
+:root.dark {
+  color-scheme: dark;
+}

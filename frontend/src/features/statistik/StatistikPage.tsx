@@ -33,42 +33,43 @@ export function StatistikPage() {
   if (fehler) {
     return (
       <div>
-        <p className="mb-4 text-sm text-red-600">{fehler}</p>
+        <p className="mb-4 text-sm text-red-600 dark:text-red-400">{fehler}</p>
         <button
           onClick={laden}
-          className="rounded-md border border-slate-300 px-4 py-2 text-base font-medium text-slate-700"
+          className="rounded-md border border-slate-300 px-4 py-2 text-base font-medium text-slate-700 dark:border-slate-600 dark:text-slate-300"
         >
           Erneut versuchen
         </button>
       </div>
     )
   }
-  if (!statistik) return <p className="text-sm text-slate-500">Lädt…</p>
+  if (!statistik)
+    return <p className="text-sm text-slate-500 dark:text-slate-400">Lädt…</p>
 
   return (
     <div>
       {turnier && (
         <Link
           to={`/turniere/${turnier.id}`}
-          className="mb-4 inline-block text-sm text-slate-500"
+          className="mb-4 inline-block text-sm text-slate-500 dark:text-slate-400"
         >
           ← {turnier.bezeichnung}
         </Link>
       )}
-      <h1 className="mb-4 text-lg font-semibold text-slate-900">
+      <h1 className="mb-4 text-lg font-semibold text-slate-900 dark:text-slate-100">
         {turnier ? `Statistik – ${turnier.bezeichnung}` : 'Statistik – alle Turniere'}
       </h1>
 
       {statistik.length === 0 ? (
         // UC-06/E1
-        <p className="rounded-lg bg-white p-4 text-sm text-slate-600 shadow-sm">
+        <p className="rounded-lg bg-white p-4 text-sm text-slate-600 shadow-sm dark:bg-slate-800 dark:text-slate-300">
           Noch keine Daten vorhanden.
         </p>
       ) : (
-        <div className="overflow-x-auto rounded-lg bg-white shadow-sm">
+        <div className="overflow-x-auto rounded-lg bg-white shadow-sm dark:bg-slate-800">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-slate-200 text-left text-slate-500">
+              <tr className="border-b border-slate-200 text-left text-slate-500 dark:border-slate-700 dark:text-slate-400">
                 <th className="px-4 py-2 font-medium">Spieler</th>
                 <th className="px-4 py-2 font-medium">Spielzeit</th>
                 {!turnier && (
@@ -76,7 +77,7 @@ export function StatistikPage() {
                 )}
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-200">
+            <tbody className="divide-y divide-slate-200 text-slate-900 dark:divide-slate-700 dark:text-slate-100">
               {statistik.map((s) => (
                 <tr key={s.spielerId}>
                   <td className="px-4 py-2">{s.name}</td>

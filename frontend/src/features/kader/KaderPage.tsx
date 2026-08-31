@@ -102,15 +102,22 @@ export function KaderPage() {
     await laden()
   }
 
+  const eingabeKlasse =
+    'rounded-md border bg-white px-3 py-2 text-base text-slate-900 dark:bg-slate-900 dark:text-slate-100'
+
   return (
     <div>
-      <h1 className="mb-4 text-lg font-semibold text-slate-900">Kader</h1>
+      <h1 className="mb-4 text-lg font-semibold text-slate-900 dark:text-slate-100">
+        Kader
+      </h1>
 
-      {ladeFehler && <p className="mb-4 text-sm text-red-600">{ladeFehler}</p>}
+      {ladeFehler && (
+        <p className="mb-4 text-sm text-red-600 dark:text-red-400">{ladeFehler}</p>
+      )}
 
       <form
         onSubmit={handleHinzufuegen}
-        className="mb-6 flex flex-wrap items-start gap-2 rounded-lg bg-white p-4 shadow-sm"
+        className="mb-6 flex flex-wrap items-start gap-2 rounded-lg bg-white p-4 shadow-sm dark:bg-slate-800"
       >
         <div>
           <input
@@ -118,8 +125,8 @@ export function KaderPage() {
             placeholder="Vorname"
             value={vorname}
             onChange={(e) => setVorname(e.target.value)}
-            className={`rounded-md border px-3 py-2 text-base ${
-              vornameFehler ? 'border-red-500' : 'border-slate-300'
+            className={`${eingabeKlasse} ${
+              vornameFehler ? 'border-red-500' : 'border-slate-300 dark:border-slate-600'
             }`}
           />
         </div>
@@ -128,7 +135,7 @@ export function KaderPage() {
           placeholder="Initiale (optional)"
           value={initiale}
           onChange={(e) => setInitiale(e.target.value)}
-          className="w-32 rounded-md border border-slate-300 px-3 py-2 text-base"
+          className={`w-32 border-slate-300 dark:border-slate-600 ${eingabeKlasse}`}
         />
         <button
           type="submit"
@@ -137,17 +144,17 @@ export function KaderPage() {
           Hinzufügen
         </button>
         {dopplungWarnung && (
-          <p className="w-full text-sm text-amber-600">
+          <p className="w-full text-sm text-amber-600 dark:text-amber-400">
             {dopplungWarnung} Erneut auf "Hinzufügen" tippen, um trotzdem zu
             speichern.
           </p>
         )}
         {speicherFehler && (
-          <p className="w-full text-sm text-red-600">{speicherFehler}</p>
+          <p className="w-full text-sm text-red-600 dark:text-red-400">{speicherFehler}</p>
         )}
       </form>
 
-      <ul className="mb-6 divide-y divide-slate-200 rounded-lg bg-white shadow-sm">
+      <ul className="mb-6 divide-y divide-slate-200 rounded-lg bg-white shadow-sm dark:divide-slate-700 dark:bg-slate-800">
         {aktive.map((s) => (
           <li key={s.id} className="flex items-center justify-between px-4 py-3">
             {bearbeiteId === s.id ? (
@@ -155,42 +162,42 @@ export function KaderPage() {
                 <input
                   value={bearbeiteVorname}
                   onChange={(e) => setBearbeiteVorname(e.target.value)}
-                  className="rounded-md border border-slate-300 px-2 py-1 text-base"
+                  className={`${eingabeKlasse} border-slate-300 px-2 py-1 dark:border-slate-600`}
                 />
                 <input
                   value={bearbeiteInitiale}
                   onChange={(e) => setBearbeiteInitiale(e.target.value)}
-                  className="w-24 rounded-md border border-slate-300 px-2 py-1 text-base"
+                  className={`w-24 ${eingabeKlasse} border-slate-300 px-2 py-1 dark:border-slate-600`}
                 />
                 <button
                   onClick={() => speichereBearbeitung(s.id)}
-                  className="text-sm font-medium text-slate-900"
+                  className="text-sm font-medium text-slate-900 dark:text-slate-100"
                 >
                   Speichern
                 </button>
                 <button
                   onClick={() => setBearbeiteId(null)}
-                  className="text-sm text-slate-500"
+                  className="text-sm text-slate-500 dark:text-slate-400"
                 >
                   Abbrechen
                 </button>
               </div>
             ) : (
               <>
-                <span>
+                <span className="text-slate-900 dark:text-slate-100">
                   {s.vorname}
                   {s.nachname_initiale ? ` ${s.nachname_initiale}.` : ''}
                 </span>
                 <div className="flex gap-3">
                   <button
                     onClick={() => starteBearbeitung(s)}
-                    className="text-sm font-medium text-slate-700"
+                    className="text-sm font-medium text-slate-700 dark:text-slate-300"
                   >
                     Bearbeiten
                   </button>
                   <button
                     onClick={() => handleEntfernen(s)}
-                    className="text-sm font-medium text-red-600"
+                    className="text-sm font-medium text-red-600 dark:text-red-400"
                   >
                     Entfernen
                   </button>
@@ -200,7 +207,7 @@ export function KaderPage() {
           </li>
         ))}
         {aktive.length === 0 && (
-          <li className="px-4 py-3 text-sm text-slate-500">
+          <li className="px-4 py-3 text-sm text-slate-500 dark:text-slate-400">
             Noch keine Spieler im Kader.
           </li>
         )}
@@ -208,29 +215,29 @@ export function KaderPage() {
 
       <button
         onClick={() => setZeigeInaktive((v) => !v)}
-        className="mb-2 text-sm font-medium text-slate-700 underline"
+        className="mb-2 text-sm font-medium text-slate-700 underline dark:text-slate-300"
       >
         {zeigeInaktive ? 'Inaktive Spieler ausblenden' : 'Inaktive Spieler anzeigen'}
       </button>
 
       {zeigeInaktive && (
-        <ul className="divide-y divide-slate-200 rounded-lg bg-white shadow-sm">
+        <ul className="divide-y divide-slate-200 rounded-lg bg-white shadow-sm dark:divide-slate-700 dark:bg-slate-800">
           {inaktive.map((s) => (
             <li key={s.id} className="flex items-center justify-between px-4 py-3">
-              <span className="text-slate-500">
+              <span className="text-slate-500 dark:text-slate-400">
                 {s.vorname}
                 {s.nachname_initiale ? ` ${s.nachname_initiale}.` : ''}
               </span>
               <button
                 onClick={() => handleReaktivieren(s)}
-                className="text-sm font-medium text-slate-900"
+                className="text-sm font-medium text-slate-900 dark:text-slate-100"
               >
                 Reaktivieren
               </button>
             </li>
           ))}
           {inaktive.length === 0 && (
-            <li className="px-4 py-3 text-sm text-slate-500">
+            <li className="px-4 py-3 text-sm text-slate-500 dark:text-slate-400">
               Keine inaktiven Spieler.
             </li>
           )}

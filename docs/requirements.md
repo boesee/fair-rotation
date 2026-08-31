@@ -35,6 +35,7 @@ Entity-Modell und die Use-Case-Spezifikationen.
 | FR-24 | Bei einem 3vs3-Spiel teilt der Trainer jeden anwesenden Spieler manuell einem der zwei Felder zu (kein Automatik-Vorschlag). Bei einem 6vs6-Spiel entfällt dieser Schritt – alle anwesenden Spieler sind automatisch dem einen Feld zugeordnet. | Ziele: Feldzuteilung |
 | FR-27 | Der Trainer kann die Turnier-Anwesenheit jederzeit korrigieren (unabhängig vom Status einzelner Spiele). Die Feldzuteilung eines einzelnen Spiels kann korrigiert werden, solange noch keine Einsätze (Ein-/Auswechslungen) für dieses Spiel erfasst wurden. | Ziele: Anwesenheit erfassen |
 | FR-25 | Weicht die Zusammensetzung eines Turniers von 3× 3vs3 + 3× 6vs6 ab, zeigt die App eine Warnung – das Speichern wird dadurch nicht blockiert. | Entity-Modell: Konsistenzregel |
+| FR-28 | Der Trainer kann ein Turnier beim Anlegen als Test-Turnier markieren. Nur für so markierte Turniere bietet die App eine Löschfunktion an, die das Turnier inklusive aller Spiele, Felder, Zuteilungen, Einsätze und der Turnier-Anwesenheit unwiderruflich entfernt. Echte Turniere ohne diese Markierung haben keine Löschfunktion in der UI. | Constraints: Testdaten dürfen die reale Historie nicht verunreinigen |
 
 ### Spielzeit-Erfassung
 

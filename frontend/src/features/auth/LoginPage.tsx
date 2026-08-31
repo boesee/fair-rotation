@@ -37,16 +37,16 @@ export function LoginPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-slate-50 px-4">
+    <div className="flex min-h-screen items-center justify-center bg-slate-50 px-4 dark:bg-slate-900">
       <form
         onSubmit={handleSubmit}
-        className="w-full max-w-sm rounded-lg bg-white p-6 shadow-sm"
+        className="w-full max-w-sm rounded-lg bg-white p-6 shadow-sm dark:bg-slate-800"
       >
-        <h1 className="mb-6 text-xl font-semibold text-slate-900">
+        <h1 className="mb-6 text-xl font-semibold text-slate-900 dark:text-slate-100">
           Spielzeit-Rotation
         </h1>
 
-        <label className="mb-1 block text-sm font-medium text-slate-700">
+        <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">
           Benutzername
         </label>
         <input
@@ -54,12 +54,12 @@ export function LoginPage() {
           autoComplete="username"
           value={username}
           onChange={(e) => setUsername(e.target.value)}
-          className={`mb-3 w-full rounded-md border px-3 py-2 text-base ${
-            usernameError ? 'border-red-500' : 'border-slate-300'
+          className={`mb-3 w-full rounded-md border bg-white px-3 py-2 text-base text-slate-900 dark:bg-slate-900 dark:text-slate-100 ${
+            usernameError ? 'border-red-500' : 'border-slate-300 dark:border-slate-600'
           }`}
         />
 
-        <label className="mb-1 block text-sm font-medium text-slate-700">
+        <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">
           Passwort
         </label>
         <input
@@ -67,13 +67,13 @@ export function LoginPage() {
           autoComplete="current-password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          className={`mb-4 w-full rounded-md border px-3 py-2 text-base ${
-            passwordError ? 'border-red-500' : 'border-slate-300'
+          className={`mb-4 w-full rounded-md border bg-white px-3 py-2 text-base text-slate-900 dark:bg-slate-900 dark:text-slate-100 ${
+            passwordError ? 'border-red-500' : 'border-slate-300 dark:border-slate-600'
           }`}
         />
 
         {formError && (
-          <p className="mb-4 text-sm text-red-600">{formError}</p>
+          <p className="mb-4 text-sm text-red-600 dark:text-red-400">{formError}</p>
         )}
 
         <button

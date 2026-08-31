@@ -23,6 +23,7 @@ Container für genau 6 Spiele.
 | id | UUID | Primärschlüssel |
 | datum | date | |
 | bezeichnung | text | z.B. "Turnier Muri, Frühling 2027" |
+| ist_test | boolean | FR-28: markiert Test-Turniere, die über die UI vollständig löschbar sind (inkl. aller abhängigen Datensätze per Cascade-Delete) |
 
 ### Spiel
 Gehört zu genau einem Turnier. Ein Turnier hat genau 6 Spiele

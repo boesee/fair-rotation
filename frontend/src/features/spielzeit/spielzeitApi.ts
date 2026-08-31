@@ -21,45 +21,50 @@ export async function listEinsaetze(feldIds: string[]): Promise<Einsatz[]> {
 
 export function formatZeit(sekunden: number): string {
   const s = Math.max(0, Math.floor(sekunden))
-  const minuten = Math.floor(s / 60)
+  const stunden = Math.floor(s / 3600)
+  const minuten = Math.floor((s % 3600) / 60)
   const rest = s % 60
-  return `${minuten}:${rest.toString().padStart(2, '0')}`
+  return `${stunden.toString().padStart(2, '0')}:${minuten.toString().padStart(2, '0')}:${rest.toString().padStart(2, '0')}`
 }
 
 // UC-05 Basic Flow + A2 (FR-30, FR-34): wechselt einen Spieler auf
-// zielFeldId ein. Hat der Spieler noch einen offenen Einsatz auf einem
-// anderen Feld dieses Spiels (Feldwechsel), wird dieser zuerst beendet;
-// die Zuteilung wird auf das neue Feld nachgefuehrt, damit UC-04 und die
-// Feld-Uebersicht konsistent bleiben.
+// zielFeldId ein. istFeldwechsel wird vom Aufrufer anhand der bereits
+// geladenen Zuteilung ermittelt (Ziel-Feld weicht von der aktuellen
+// Zuteilung ab) – im weit haeufigeren Normalfall (kein Feldwechsel) spart
+// das zwei Netzwerk-Roundtrips (Pruefung + Zuteilungs-Update), die im
+// Feldtest als spuerbare Latenz aufgefallen sind.
 export async function einwechseln(
   feldIdsDesSpiels: string[],
   spielerId: string,
   zielFeldId: string,
+  istFeldwechsel: boolean,
 ): Promise<void> {
   const jetzt = new Date().toISOString()
 
-  const { data: offene, error: offeneError } = await supabase
-    .from('einsatz')
-    .select('id')
-    .in('feld_id', feldIdsDesSpiels)
-    .eq('spieler_id', spielerId)
-    .is('ausgewechselt_um', null)
-  if (offeneError) throw offeneError
-
-  for (const e of offene) {
-    const { error } = await supabase
+  if (istFeldwechsel) {
+    const { data: offene, error: offeneError } = await supabase
       .from('einsatz')
-      .update({ ausgewechselt_um: jetzt })
-      .eq('id', e.id)
-    if (error) throw error
-  }
+      .select('id')
+      .in('feld_id', feldIdsDesSpiels)
+      .eq('spieler_id', spielerId)
+      .is('ausgewechselt_um', null)
+    if (offeneError) throw offeneError
 
-  const { error: zuteilungError } = await supabase
-    .from('zuteilung')
-    .update({ feld_id: zielFeldId })
-    .eq('spieler_id', spielerId)
-    .in('feld_id', feldIdsDesSpiels)
-  if (zuteilungError) throw zuteilungError
+    for (const e of offene) {
+      const { error } = await supabase
+        .from('einsatz')
+        .update({ ausgewechselt_um: jetzt })
+        .eq('id', e.id)
+      if (error) throw error
+    }
+
+    const { error: zuteilungError } = await supabase
+      .from('zuteilung')
+      .update({ feld_id: zielFeldId })
+      .eq('spieler_id', spielerId)
+      .in('feld_id', feldIdsDesSpiels)
+    if (zuteilungError) throw zuteilungError
+  }
 
   const { error: insertError } = await supabase.from('einsatz').insert({
     feld_id: zielFeldId,
@@ -69,23 +74,35 @@ export async function einwechseln(
   if (insertError) throw insertError
 }
 
-// Startet alle Bank-Spieler eines Spiels gleichzeitig (typischerweise zu
-// Spielbeginn statt jeden Spieler einzeln einzuwechseln). spielerIds sind
-// die noch nicht aktiven, aber einem Feld zugeteilten Spieler.
-export async function alleEinwechseln(
-  eintraege: { spielerId: string; feldId: string }[],
+// Mehrfachauswahl-Wechsel (Blockwechsel): schliesst mehrere offene
+// Einsaetze und eroeffnet mehrere neue in je einem Bulk-Request, statt pro
+// Spieler einzeln zu wechseln – deutlich weniger Taps und Roundtrips fuer
+// den im Feldtest beobachteten Block-Rotationsablauf (z.B. 3er-Bloecke).
+export async function wechsleMehrere(
+  auswechselnEinsatzIds: string[],
+  einwechseln: { spielerId: string; feldId: string }[],
 ): Promise<void> {
-  if (eintraege.length === 0) return
   const jetzt = new Date().toISOString()
 
-  const { error } = await supabase.from('einsatz').insert(
-    eintraege.map(({ spielerId, feldId }) => ({
-      feld_id: feldId,
-      spieler_id: spielerId,
-      eingewechselt_um: jetzt,
-    })),
-  )
-  if (error) throw error
+  if (auswechselnEinsatzIds.length > 0) {
+    const { error } = await supabase
+      .from('einsatz')
+      .update({ ausgewechselt_um: jetzt })
+      .in('id', auswechselnEinsatzIds)
+      .is('ausgewechselt_um', null)
+    if (error) throw error
+  }
+
+  if (einwechseln.length > 0) {
+    const { error } = await supabase.from('einsatz').insert(
+      einwechseln.map(({ spielerId, feldId }) => ({
+        feld_id: feldId,
+        spieler_id: spielerId,
+        eingewechselt_um: jetzt,
+      })),
+    )
+    if (error) throw error
+  }
 }
 
 // UC-05/A1 (FR-31)

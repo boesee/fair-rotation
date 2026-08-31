@@ -66,29 +66,31 @@ export function TurnierAnwesenheitPage() {
     }
   }
 
-  if (ladeFehler) return <p className="text-sm text-red-600">{ladeFehler}</p>
-  if (!turnier) return <p className="text-sm text-slate-500">Lädt…</p>
+  if (ladeFehler)
+    return <p className="text-sm text-red-600 dark:text-red-400">{ladeFehler}</p>
+  if (!turnier)
+    return <p className="text-sm text-slate-500 dark:text-slate-400">Lädt…</p>
 
   return (
     <div>
       <Link
         to={`/turniere/${turnier.id}`}
-        className="mb-4 inline-block text-sm text-slate-500"
+        className="mb-4 inline-block text-sm text-slate-500 dark:text-slate-400"
       >
         ← {turnier.bezeichnung}
       </Link>
-      <h1 className="mb-1 text-lg font-semibold text-slate-900">
+      <h1 className="mb-1 text-lg font-semibold text-slate-900 dark:text-slate-100">
         Anwesenheit
       </h1>
-      <p className="mb-4 text-sm text-slate-500">
+      <p className="mb-4 text-sm text-slate-500 dark:text-slate-400">
         Gilt für alle Spiele dieses Turniers und kann jederzeit angepasst
         werden.
       </p>
 
-      <ul className="mb-4 divide-y divide-slate-200 rounded-lg bg-white shadow-sm">
+      <ul className="mb-4 divide-y divide-slate-200 rounded-lg bg-white shadow-sm dark:divide-slate-700 dark:bg-slate-800">
         {kader.map((s) => (
           <li key={s.id} className="flex items-center justify-between px-4 py-3">
-            <label className="flex flex-1 items-center gap-3">
+            <label className="flex flex-1 items-center gap-3 text-slate-900 dark:text-slate-100">
               <input
                 type="checkbox"
                 checked={anwesenheitMap[s.id] ?? false}
@@ -103,17 +105,19 @@ export function TurnierAnwesenheitPage() {
           </li>
         ))}
         {kader.length === 0 && (
-          <li className="px-4 py-3 text-sm text-slate-500">
+          <li className="px-4 py-3 text-sm text-slate-500 dark:text-slate-400">
             Keine aktiven Spieler im Kader.
           </li>
         )}
       </ul>
 
       {speicherFehler && (
-        <p className="mb-4 text-sm text-red-600">{speicherFehler}</p>
+        <p className="mb-4 text-sm text-red-600 dark:text-red-400">{speicherFehler}</p>
       )}
       {gespeichert && (
-        <p className="mb-4 text-sm text-green-700">Anwesenheit gespeichert.</p>
+        <p className="mb-4 text-sm text-green-700 dark:text-green-400">
+          Anwesenheit gespeichert.
+        </p>
       )}
 
       <button
