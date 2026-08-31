@@ -115,6 +115,43 @@ export async function auswechseln(einsatzId: string): Promise<void> {
   if (error) throw error
 }
 
+// Admin-Korrekturwerkzeug (siehe TurnierAdminPage): manuelles Bearbeiten von
+// Einsatz-Zeitpunkten, Loeschen und Nacherfassen fehlender Einsaetze. Bewusst
+// ohne die Invarianten-Pruefungen aus einwechseln/wechsleMehrere (hoechstens
+// ein offener Einsatz pro Spieler) – das ist hier gerade der Zweck des
+// Werkzeugs, der Trainer korrigiert bewusst abweichende Faelle.
+export async function updateEinsatzZeiten(
+  id: string,
+  eingewechseltUm: string,
+  ausgewechseltUm: string | null,
+): Promise<void> {
+  const { error } = await supabase
+    .from('einsatz')
+    .update({ eingewechselt_um: eingewechseltUm, ausgewechselt_um: ausgewechseltUm })
+    .eq('id', id)
+  if (error) throw error
+}
+
+export async function loescheEinsatz(id: string): Promise<void> {
+  const { error } = await supabase.from('einsatz').delete().eq('id', id)
+  if (error) throw error
+}
+
+export async function fuegeEinsatzHinzu(
+  feldId: string,
+  spielerId: string,
+  eingewechseltUm: string,
+  ausgewechseltUm: string | null,
+): Promise<void> {
+  const { error } = await supabase.from('einsatz').insert({
+    feld_id: feldId,
+    spieler_id: spielerId,
+    eingewechselt_um: eingewechseltUm,
+    ausgewechselt_um: ausgewechseltUm,
+  })
+  if (error) throw error
+}
+
 // UC-05/A3 (FR-35): schliesst alle offenen Einsaetze und beendet das Spiel.
 export async function spielBeenden(
   spielId: string,

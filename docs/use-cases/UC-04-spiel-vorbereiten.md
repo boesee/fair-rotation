@@ -119,15 +119,16 @@ erfasst).
 
 # UC-04a: Turnier-Anwesenheit erfassen
 
-**Abgedeckte Anforderungen:** FR-22, FR-27
+**Abgedeckte Anforderungen:** FR-22, FR-27, FR-29
 
 ## Kurzbeschreibung
 
 Der Trainer markiert, welche Kaderspieler an einem Turniertag anwesend
 sind. Diese Anwesenheit gilt für alle Spiele des Turniers und ist die
-Kandidatenliste für die Feldzuteilung in UC-04. Jederzeit nachträglich
-änderbar (z.B. Spieler kommt später dazu), unabhängig vom Status
-einzelner Spiele.
+Kandidatenliste für die Feldzuteilung in UC-04. Nachträglich änderbar
+(z.B. Spieler kommt später dazu), unabhängig vom Status einzelner Spiele –
+bis das Turnier als Ganzes `beendet` ist (FR-29). Danach ist eine
+Korrektur nur noch über den Admin-Bereich möglich (UC-07).
 
 ## Primärer Akteur
 
@@ -158,8 +159,9 @@ Trainer
 
 **A1 – Nachträglich korrigieren (FR-27)**
 1. Der Trainer öffnet die Anwesenheits-Erfassung erneut, jederzeit
-   während des Turniertags, unabhängig davon, ob bereits Spiele
-   `laufend`/`beendet` sind.
+   während des Turniertags, unabhängig davon, ob bereits einzelne Spiele
+   `laufend`/`beendet` sind – solange das Turnier als Ganzes noch nicht
+   `beendet` ist (E2).
 2. Die App zeigt den zuletzt gespeicherten Stand vorausgefüllt.
 3. Der Trainer passt die Anwesenheit an.
 4. Der Trainer bestätigt; die Änderung wirkt sich auf die Feldzuteilung
@@ -173,10 +175,17 @@ Beim Speichern: Supabase nicht erreichbar.
 1. Die App zeigt eine Fehlermeldung, bisherige Eingaben bleiben erhalten,
    der Trainer kann erneut speichern.
 
+**E2 – Turnier bereits vollständig beendet**
+Bei Schritt 1 des Basic Flow bzw. von A1: Der Turnier-Status ist
+`beendet` (FR-29, alle Spiele des Turniers sind `beendet`).
+1. Die App zeigt die Anwesenheit nur noch lesend an und verweist auf den
+   Admin-Bereich (UC-07) für eine Korrektur.
+
 ## Testfälle
 
 | # | Szenario | Erwartetes Ergebnis |
 |---|---|---|
 | T1 | Anwesenheit für ein neues Turnier erfassen | Anwesenheit-Datensätze für alle aktiven Kaderspieler gespeichert (Basic Flow) |
-| T2 | Anwesenheit für ein Turnier nachträglich ändern, während ein Spiel bereits `beendet` ist | Änderung wird gespeichert, betrifft nur künftige Feldzuteilungen (A1) |
+| T2 | Anwesenheit für ein Turnier nachträglich ändern, während ein Spiel bereits `beendet`, aber nicht alle Spiele beendet sind | Änderung wird gespeichert, betrifft nur künftige Feldzuteilungen (A1) |
 | T3 | Anwesenheit speichern ohne Netzwerkverbindung | Fehlermeldung, Eingabe bleibt erhalten (E1) |
+| T4 | Anwesenheits-Erfassung öffnen, nachdem das letzte Spiel des Turniers beendet wurde | Nur lesende Ansicht mit Verweis auf Admin-Bereich, keine Speichern-Möglichkeit (E2) |

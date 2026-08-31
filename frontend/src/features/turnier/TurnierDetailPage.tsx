@@ -152,6 +152,12 @@ export function TurnierDetailPage() {
         >
           Statistik
         </Link>
+        <Link
+          to={`/turniere/${turnier.id}/admin`}
+          className="text-sm font-medium text-slate-700 underline dark:text-slate-300"
+        >
+          Admin
+        </Link>
       </div>
 
       {mixWarnung && (

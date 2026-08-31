@@ -16,6 +16,7 @@ rectangle "Spielzeit-Rotation" {
   usecase "UC-04\nSpiel vorbereiten" as UC04
   usecase "UC-05\nSpielzeit erfassen" as UC05
   usecase "UC-06\nStatistik einsehen" as UC06
+  usecase "UC-07\nNachträglich korrigieren\n(Admin)" as UC07
 }
 
 Trainer --> UC01
@@ -25,6 +26,7 @@ Trainer --> UC04a
 Trainer --> UC04
 Trainer --> UC05
 Trainer --> UC06
+Trainer --> UC07
 
 UC02 ..> UC01 : <<include>>
 UC03 ..> UC01 : <<include>>
@@ -32,11 +34,13 @@ UC04a ..> UC01 : <<include>>
 UC04 ..> UC01 : <<include>>
 UC05 ..> UC01 : <<include>>
 UC06 ..> UC01 : <<include>>
+UC07 ..> UC01 : <<include>>
 
 UC04a ..> UC03 : <<precedes>>
 UC04 ..> UC04a : <<precedes>>
 UC05 ..> UC04 : <<precedes>>
 UC06 ..> UC05 : <<precedes>>
+UC07 ..> UC05 : <<precedes>>
 
 note right of UC01
   Zugriffsschutz (FR-1/FR-2, NFR-4):
@@ -75,9 +79,17 @@ note bottom of UC05
 end note
 
 note bottom of UC06
-  Berücksichtigt ausschliesslich
-  Spiele mit Status "beendet"
-  (FR-40/41).
+  Berücksichtigt turnierübergreifend
+  nur vollständig beendete,
+  nicht als Test markierte
+  Turniere (FR-28/29/41/42).
+end note
+
+note bottom of UC07
+  Ungeschütztes Korrekturwerkzeug
+  ohne Plausibilitätsprüfung,
+  auch nach Turnierabschluss
+  nutzbar (FR-43).
 end note
 
 @enduml

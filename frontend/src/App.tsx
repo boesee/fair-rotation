@@ -9,6 +9,7 @@ import { KaderPage } from './features/kader/KaderPage'
 import { TurnierListPage } from './features/turnier/TurnierListPage'
 import { TurnierDetailPage } from './features/turnier/TurnierDetailPage'
 import { TurnierAnwesenheitPage } from './features/turnier/TurnierAnwesenheitPage'
+import { TurnierAdminPage } from './features/turnier/TurnierAdminPage'
 import { SpielVorbereitenPage } from './features/spiel-vorbereiten/SpielVorbereitenPage'
 import { SpielzeitPage } from './features/spielzeit/SpielzeitPage'
 import { StatistikPage } from './features/statistik/StatistikPage'
@@ -81,6 +82,14 @@ export default function App() {
             element={
               <GeschuetzterBereich>
                 <TurnierAnwesenheitPage />
+              </GeschuetzterBereich>
+            }
+          />
+          <Route
+            path="/turniere/:turnierId/admin"
+            element={
+              <GeschuetzterBereich>
+                <TurnierAdminPage />
               </GeschuetzterBereich>
             }
           />
