@@ -100,7 +100,12 @@ export function AnwesenheitEditor({ turnierId, gesperrt }: Props) {
                 />
                 <span>
                   {s.vorname}
-                  {s.nachname_initiale ? ` ${s.nachname_initiale}.` : ''} fehlt
+                  {s.nachname_initiale ? ` ${s.nachname_initiale}.` : ''}
+                  {fehlt && (
+                    <span className="ml-1 text-amber-700 dark:text-amber-400">
+                      fehlt
+                    </span>
+                  )}
                 </span>
               </label>
 
