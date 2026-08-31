@@ -25,6 +25,12 @@ Container für genau 6 Spiele.
 | bezeichnung | text | z.B. "Turnier Muri, Frühling 2027" |
 | ist_test | boolean | FR-28: markiert Test-Turniere, die über die UI vollständig löschbar sind (inkl. aller abhängigen Datensätze per Cascade-Delete) |
 
+*Status (FR-29) ist kein gespeichertes Attribut, sondern wird analog zur
+berechneten Spielzeit (Abschnitt "Einsatz") clientseitig aus dem Status
+aller zugehörigen Spiele abgeleitet (`geplant`/`laufend`/`beendet`,
+identische Werte wie bei Spiel) – dadurch immer konsistent, ohne eigenen
+DB-Trigger.*
+
 ### Spiel
 Gehört zu genau einem Turnier. Ein Turnier hat genau 6 Spiele
 (FR-20): 3× Modus `3vs3`, 3× Modus `6vs6`, Reihenfolge frei.

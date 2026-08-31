@@ -2,6 +2,7 @@ import { supabase } from '../../lib/supabaseClient'
 
 export type Modus = '3vs3' | '6vs6'
 export type SpielStatus = 'geplant' | 'laufend' | 'beendet'
+export type TurnierStatus = SpielStatus
 
 export interface Turnier {
   id: string
@@ -140,6 +141,27 @@ export async function tauscheReihenfolge(
     .update({ reihenfolge: a.reihenfolge })
     .eq('id', b.id)
   if (bError) throw bError
+}
+
+// FR-29: Turnier-Status wird nicht gespeichert, sondern automatisch aus dem
+// Status seiner Spiele abgeleitet (analog zur berechneten Spielzeit, siehe
+// docs/architecture.md §4.3 "Kein clientseitiges Caching") – dadurch immer
+// konsistent, ohne eigenen DB-Trigger oder Schema-Migration.
+export function berechneTurnierStatus(
+  spiele: { status: SpielStatus }[],
+): TurnierStatus {
+  if (spiele.length === 0) return 'geplant'
+  if (spiele.every((s) => s.status === 'beendet')) return 'beendet'
+  if (spiele.some((s) => s.status !== 'geplant')) return 'laufend'
+  return 'geplant'
+}
+
+export async function listSpielStatusAllerTurniere(): Promise<
+  { turnier_id: string; status: SpielStatus }[]
+> {
+  const { data, error } = await supabase.from('spiel').select('turnier_id, status')
+  if (error) throw error
+  return data
 }
 
 // UC-03/A3 (FR-25): Warnung, wenn die Zusammenstellung von 3x 3vs3 + 3x

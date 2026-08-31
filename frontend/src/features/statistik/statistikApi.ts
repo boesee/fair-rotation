@@ -2,6 +2,7 @@ import { supabase } from '../../lib/supabaseClient'
 import { listAlleSpieler } from '../kader/kaderApi'
 import type { Feld } from '../spiel-vorbereiten/spielVorbereitenApi'
 import { listEinsaetze } from '../spielzeit/spielzeitApi'
+import { berechneTurnierStatus, type SpielStatus } from '../turnier/turnierApi'
 
 export interface SpielerStatistik {
   spielerId: string
@@ -12,11 +13,57 @@ export interface SpielerStatistik {
   anzahlTurniereAnwesend: number
 }
 
-async function listBeendeteSpielIds(turnierId?: string): Promise<string[]> {
-  let query = supabase.from('spiel').select('id').eq('status', 'beendet')
-  if (turnierId) query = query.eq('turnier_id', turnierId)
+// FR-29/FR-41: die turnieruebergreifende Statistik beruecksichtigt nur
+// Turniere, die (a) nicht als Test markiert sind (FR-28) und (b) als Ganzes
+// `beendet` sind (alle Spiele beendet, berechneTurnierStatus). Die
+// Einzelturnier-Ansicht (turnierId gesetzt) ist davon nicht betroffen – dort
+// bleiben bereits beendete Spiele eines noch laufenden Turniers sichtbar.
+async function listAbgeschlosseneNichtTestTurnierIds(): Promise<string[]> {
+  const { data: turniere, error: turniereError } = await supabase
+    .from('turnier')
+    .select('id')
+    .eq('ist_test', false)
+  if (turniereError) throw turniereError
+  if (turniere.length === 0) return []
 
-  const { data, error } = await query
+  const turnierIds = turniere.map((t) => t.id)
+  const { data: spiele, error: spieleError } = await supabase
+    .from('spiel')
+    .select('turnier_id, status')
+    .in('turnier_id', turnierIds)
+  if (spieleError) throw spieleError
+
+  const spieleProTurnier = new Map<string, { status: SpielStatus }[]>()
+  spiele.forEach((s) => {
+    const liste = spieleProTurnier.get(s.turnier_id) ?? []
+    liste.push({ status: s.status })
+    spieleProTurnier.set(s.turnier_id, liste)
+  })
+
+  return turnierIds.filter(
+    (id) => berechneTurnierStatus(spieleProTurnier.get(id) ?? []) === 'beendet',
+  )
+}
+
+async function listBeendeteSpielIdsFuerTurnier(turnierId: string): Promise<string[]> {
+  const { data, error } = await supabase
+    .from('spiel')
+    .select('id')
+    .eq('status', 'beendet')
+    .eq('turnier_id', turnierId)
+  if (error) throw error
+  return data.map((s) => s.id)
+}
+
+async function listBeendeteSpielIdsFuerTurniere(
+  turnierIds: string[],
+): Promise<string[]> {
+  if (turnierIds.length === 0) return []
+  const { data, error } = await supabase
+    .from('spiel')
+    .select('id')
+    .eq('status', 'beendet')
+    .in('turnier_id', turnierIds)
   if (error) throw error
   return data.map((s) => s.id)
 }
@@ -32,14 +79,18 @@ async function listFelderFuerSpiele(spielIds: string[]): Promise<Feld[]> {
   return data
 }
 
-// FR-42a (vereinfacht, siehe UC-06-Notiz): zaehlt Turniere mit Anwesenheit,
-// unabhaengig vom Spiel-Status, da Anwesenheit turnier-weit erfasst wird
-// (features/turnier/anwesenheitApi.ts) und kein reines Spiel-Ergebnis ist.
-async function zaehleTurniereProSpieler(): Promise<Map<string, number>> {
+// FR-42: zaehlt je Spieler, an wie vielen der beruecksichtigten (echten,
+// vollstaendig beendeten) Turniere er als anwesend erfasst ist.
+async function zaehleTurniereProSpieler(
+  erlaubteTurnierIds: string[],
+): Promise<Map<string, number>> {
+  if (erlaubteTurnierIds.length === 0) return new Map()
+
   const { data, error } = await supabase
     .from('anwesenheit')
     .select('spieler_id, turnier_id')
     .eq('anwesend', true)
+    .in('turnier_id', erlaubteTurnierIds)
   if (error) throw error
 
   const turniereProSpieler = new Map<string, Set<string>>()
@@ -59,16 +110,27 @@ async function zaehleTurniereProSpieler(): Promise<Map<string, number>> {
 
 // UC-06 (FR-40/41): aggregiert kumulierte Spielzeit ausschliesslich auf
 // Basis beendeter Spiele. turnierId gesetzt -> Basic Flow (ein Turnier),
-// sonst A1 (turnieruebergreifend, inkl. Anzahl Turniere mit Anwesenheit).
+// sonst A1 (turnieruebergreifend, nur vollstaendig beendete Nicht-Test-
+// Turniere, inkl. Anzahl Turniere mit Anwesenheit).
 export async function berechneStatistik(
   turnierId?: string,
 ): Promise<SpielerStatistik[]> {
-  const spielIds = await listBeendeteSpielIds(turnierId)
+  let spielIds: string[]
+  let anwesenheitZaehlung = new Map<string, number>()
 
-  const [alleSpieler, felder, anwesenheitZaehlung] = await Promise.all([
+  if (turnierId) {
+    spielIds = await listBeendeteSpielIdsFuerTurnier(turnierId)
+  } else {
+    const erlaubteTurnierIds = await listAbgeschlosseneNichtTestTurnierIds()
+    ;[spielIds, anwesenheitZaehlung] = await Promise.all([
+      listBeendeteSpielIdsFuerTurniere(erlaubteTurnierIds),
+      zaehleTurniereProSpieler(erlaubteTurnierIds),
+    ])
+  }
+
+  const [alleSpieler, felder] = await Promise.all([
     listAlleSpieler(),
     listFelderFuerSpiele(spielIds),
-    turnierId ? Promise.resolve(new Map<string, number>()) : zaehleTurniereProSpieler(),
   ])
   const feldIds = felder.map((f) => f.id)
   const einsaetze = await listEinsaetze(feldIds)

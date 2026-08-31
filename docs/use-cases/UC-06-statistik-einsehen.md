@@ -1,6 +1,6 @@
 # UC-06: Statistik einsehen
 
-**Abgedeckte Anforderungen:** FR-40, FR-41, FR-42
+**Abgedeckte Anforderungen:** FR-40, FR-41, FR-42, FR-29
 
 ## Kurzbeschreibung
 
@@ -50,13 +50,17 @@ Trainer
 **A1 – Turnierübergreifende Statistik (FR-41, FR-42)**
 1. Der Trainer öffnet den globalen Statistik-Bereich (unabhängig von
    einem einzelnen Turnier).
-2. Die App berechnet für jeden Spieler (inkl. inaktiv gesetzter Spieler
-   mit Historie, vgl. UC-02) die kumulierte Spielzeit über alle
-   **beendeten** Spiele aller Turniere hinweg.
-3. Die App berechnet zusätzlich je Spieler die Anzahl Turniere mit
-   erfasster Anwesenheit (FR-42), unabhängig vom Status der Spiele dieses
-   Turniers.
-4. Die App zeigt die Spieler absteigend nach kumulierter Gesamt-Spielzeit
+2. Die App ermittelt zunächst, welche Turniere hier überhaupt
+   berücksichtigt werden: nicht als Test markiert (FR-28) **und**
+   vollständig `beendet` (FR-29, Turnier-Status aus allen seinen Spielen
+   abgeleitet). Ein noch laufendes Turnier fliesst also auch dann nicht
+   ein, wenn einzelne seiner Spiele schon beendet sind.
+3. Die App berechnet für jeden Spieler (inkl. inaktiv gesetzter Spieler
+   mit Historie, vgl. UC-02) die kumulierte Spielzeit über alle beendeten
+   Spiele dieser berücksichtigten Turniere hinweg.
+4. Die App berechnet zusätzlich je Spieler die Anzahl dieser
+   berücksichtigten Turniere mit erfasster Anwesenheit (FR-42).
+5. Die App zeigt die Spieler absteigend nach kumulierter Gesamt-Spielzeit
    sortiert, mit der Anzahl-Turniere-Spalte zusätzlich.
 
 ## Ausnahmeabläufe
@@ -77,8 +81,10 @@ Beim Laden der Statistik: Supabase nicht erreichbar.
 | # | Szenario | Erwartetes Ergebnis |
 |---|---|---|
 | T1 | Statistik eines Turniers mit 3 beendeten Spielen und unterschiedlichen Einsatzzeiten aufrufen | Spieler werden absteigend nach kumulierter Spielzeit dieses Turniers angezeigt, Werte stimmen mit der Summe der Einsätze überein (Basic Flow) |
-| T2 | Turnierübergreifende Statistik nach zwei abgeschlossenen Turnieren aufrufen, bei denen der Spieler beide Male anwesend war | Kumulierte Spielzeit über beide Turniere hinweg korrekt summiert; Anzahl Turniere = 2 (A1) |
+| T2 | Turnierübergreifende Statistik nach zwei vollständig beendeten, echten Turnieren aufrufen, bei denen der Spieler beide Male anwesend war | Kumulierte Spielzeit über beide Turniere hinweg korrekt summiert; Anzahl Turniere = 2 (A1) |
+| T3 | Turnierübergreifende Statistik aufrufen, während eines der Turniere noch `laufend` ist (einzelne Spiele davon bereits `beendet`) | Dieses Turnier fliesst komplett nicht ein, auch nicht mit seinen bereits beendeten Spielen (A1, Schritt 2) |
 | T4 | Statistik aufrufen, während ein Spiel im Status `laufend` ist (noch nicht beendet) | Dieses Spiel fliesst nicht in die Spielzeit-Berechnung ein; Werte bleiben stabil, auch wenn gerade Ein-/Auswechslungen stattfinden (Basic Flow, Schritt 2) |
 | T5 | Statistik eines neu angelegten Turniers ohne erfasste Spiele aufrufen | Hinweis "Noch keine Daten vorhanden" statt leerer Tabelle (E1) |
 | T6 | Statistik-Ansicht ohne Netzwerkverbindung öffnen | Fehlermeldung mit Wiederholungsmöglichkeit (E2) |
 | T7 | Statistik nach Deaktivierung eines Spielers (UC-02, A2) turnierübergreifend aufrufen | Der deaktivierte Spieler erscheint weiterhin mit seinen historischen Werten (Bezug FR-40/41, konsistent mit UC-02/T7) |
+| T8 | Turnierübergreifende Statistik nach Abschluss eines Test-Turniers (FR-28) aufrufen | Das Test-Turnier fliesst nicht ein, auch wenn es vollständig `beendet` ist (A1, Schritt 2) |

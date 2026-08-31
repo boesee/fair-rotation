@@ -3,6 +3,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom'
 import {
   MAX_SPIELE_PRO_TURNIER,
   addSpiel,
+  berechneTurnierStatus,
   getTurnier,
   listSpiele,
   loescheTurnier,
@@ -106,6 +107,7 @@ export function TurnierDetailPage() {
 
   const mixWarnung = pruefeModusMix(spiele)
   const maxErreicht = spiele.length >= MAX_SPIELE_PRO_TURNIER
+  const turnierStatus = berechneTurnierStatus(spiele)
 
   return (
     <div>
@@ -125,7 +127,7 @@ export function TurnierDetailPage() {
       </h1>
       <p className="mb-4 text-sm text-slate-500 dark:text-slate-400">
         {turnier.datum} · {spiele.length} von {MAX_SPIELE_PRO_TURNIER} Spielen
-        erfasst
+        erfasst · Status: {turnierStatus}
       </p>
 
       {turnier.ist_test && (

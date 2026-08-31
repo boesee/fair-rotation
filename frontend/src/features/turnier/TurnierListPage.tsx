@@ -1,9 +1,19 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import { Link } from 'react-router-dom'
-import { createTurnier, listTurniere, type Turnier } from './turnierApi'
+import {
+  berechneTurnierStatus,
+  createTurnier,
+  listSpielStatusAllerTurniere,
+  listTurniere,
+  type SpielStatus,
+  type Turnier,
+} from './turnierApi'
 
 export function TurnierListPage() {
   const [turniere, setTurniere] = useState<Turnier[]>([])
+  const [spielStatusRows, setSpielStatusRows] = useState<
+    { turnier_id: string; status: SpielStatus }[]
+  >([])
   const [datum, setDatum] = useState('')
   const [bezeichnung, setBezeichnung] = useState('')
   const [istTest, setIstTest] = useState(false)
@@ -11,7 +21,12 @@ export function TurnierListPage() {
 
   async function laden() {
     try {
-      setTurniere(await listTurniere())
+      const [t, s] = await Promise.all([
+        listTurniere(),
+        listSpielStatusAllerTurniere(),
+      ])
+      setTurniere(t)
+      setSpielStatusRows(s)
     } catch {
       setFehler('Keine Verbindung – bitte Seite neu laden.')
     }
@@ -84,26 +99,31 @@ export function TurnierListPage() {
       </form>
 
       <ul className="divide-y divide-slate-200 rounded-lg bg-white shadow-sm dark:divide-slate-700 dark:bg-slate-800">
-        {turniere.map((t) => (
-          <li key={t.id}>
-            <Link
-              to={`/turniere/${t.id}`}
-              className="flex items-center justify-between px-4 py-3 text-slate-900 hover:bg-slate-50 dark:text-slate-100 dark:hover:bg-slate-700"
-            >
-              <span>
-                {t.bezeichnung}
-                {t.ist_test && (
-                  <span className="ml-2 rounded bg-amber-100 px-1.5 py-0.5 text-xs font-medium text-amber-700 dark:bg-amber-950/40 dark:text-amber-300">
-                    Test
-                  </span>
-                )}
-              </span>
-              <span className="text-sm text-slate-500 dark:text-slate-400">
-                {t.datum}
-              </span>
-            </Link>
-          </li>
-        ))}
+        {turniere.map((t) => {
+          const status = berechneTurnierStatus(
+            spielStatusRows.filter((r) => r.turnier_id === t.id),
+          )
+          return (
+            <li key={t.id}>
+              <Link
+                to={`/turniere/${t.id}`}
+                className="flex items-center justify-between px-4 py-3 text-slate-900 hover:bg-slate-50 dark:text-slate-100 dark:hover:bg-slate-700"
+              >
+                <span>
+                  {t.bezeichnung}
+                  {t.ist_test && (
+                    <span className="ml-2 rounded bg-amber-100 px-1.5 py-0.5 text-xs font-medium text-amber-700 dark:bg-amber-950/40 dark:text-amber-300">
+                      Test
+                    </span>
+                  )}
+                </span>
+                <span className="text-sm text-slate-500 dark:text-slate-400">
+                  {t.datum} · {status}
+                </span>
+              </Link>
+            </li>
+          )
+        })}
         {turniere.length === 0 && (
           <li className="px-4 py-3 text-sm text-slate-500 dark:text-slate-400">
             Noch keine Turniere angelegt.

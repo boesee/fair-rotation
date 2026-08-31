@@ -36,6 +36,7 @@ Entity-Modell und die Use-Case-Spezifikationen.
 | FR-27 | Der Trainer kann die Turnier-Anwesenheit jederzeit korrigieren (unabhängig vom Status einzelner Spiele). Die Feldzuteilung eines einzelnen Spiels kann korrigiert werden, solange noch keine Einsätze (Ein-/Auswechslungen) für dieses Spiel erfasst wurden. | Ziele: Anwesenheit erfassen |
 | FR-25 | Weicht die Zusammensetzung eines Turniers von 3× 3vs3 + 3× 6vs6 ab, zeigt die App eine Warnung – das Speichern wird dadurch nicht blockiert. | Entity-Modell: Konsistenzregel |
 | FR-28 | Der Trainer kann ein Turnier beim Anlegen als Test-Turnier markieren. Nur für so markierte Turniere bietet die App eine Löschfunktion an, die das Turnier inklusive aller Spiele, Felder, Zuteilungen, Einsätze und der Turnier-Anwesenheit unwiderruflich entfernt. Echte Turniere ohne diese Markierung haben keine Löschfunktion in der UI. | Constraints: Testdaten dürfen die reale Historie nicht verunreinigen |
+| FR-29 | Ein Turnier hat denselben Status wie ein Spiel (`geplant`, `laufend`, `beendet`), automatisch abgeleitet aus dem Status seiner Spiele: `geplant` ohne oder nur mit `geplant`-Spielen, `laufend` sobald mindestens ein Spiel gestartet wurde, `beendet` erst wenn alle Spiele `beendet` sind. Kein manueller Statuswechsel durch den Trainer. | Ziele: Turnier mit mehreren Spielen |
 
 ### Spielzeit-Erfassung
 
@@ -54,8 +55,8 @@ Entity-Modell und die Use-Case-Spezifikationen.
 | ID | Anforderung | Quelle (Vision) |
 |---|---|---|
 | FR-40 | Der Trainer kann für ein einzelnes Turnier die kumulierte Spielzeit je Spieler einsehen, berechnet ausschliesslich aus Spielen mit Status `beendet` (laufende Spiele fliessen nicht ein). | Ziele: Statistik je Turnier |
-| FR-41 | Der Trainer kann turnierübergreifend die kumulierte Spielzeit je Spieler einsehen, berechnet ausschliesslich aus Spielen mit Status `beendet`. | Ziele: Statistik turnierübergreifend |
-| FR-42 | Der Trainer kann turnierübergreifend für jeden Spieler die Anzahl Turniere mit erfasster Anwesenheit einsehen. Eine zusätzliche Kennzahl auf Spiel-Ebene (Anzahl Spiele mit tatsächlicher Einsatzzeit) ist bewusst nicht Teil der Statistik-Ansicht – der Trainer hat dafür kein Bedürfnis geäussert, seit Anwesenheit turnierweit statt pro Spiel erfasst wird (FR-22). | Ziele: Teilnahme-Statistik |
+| FR-41 | Der Trainer kann turnierübergreifend die kumulierte Spielzeit je Spieler einsehen, berechnet ausschliesslich aus Spielen mit Status `beendet` **innerhalb vollständig beendeter, nicht als Test markierter Turniere** (FR-28/FR-29). Ein noch laufendes Turnier (auch wenn einzelne seiner Spiele schon beendet sind) sowie Test-Turniere fliessen nicht in diese turnierübergreifende Sicht ein – die Einzelturnier-Statistik (FR-40) ist davon nicht betroffen. | Ziele: Statistik turnierübergreifend |
+| FR-42 | Der Trainer kann turnierübergreifend für jeden Spieler die Anzahl (vollständig beendeter, nicht als Test markierter) Turniere mit erfasster Anwesenheit einsehen. Eine zusätzliche Kennzahl auf Spiel-Ebene (Anzahl Spiele mit tatsächlicher Einsatzzeit) ist bewusst nicht Teil der Statistik-Ansicht – der Trainer hat dafür kein Bedürfnis geäussert, seit Anwesenheit turnierweit statt pro Spiel erfasst wird (FR-22). | Ziele: Teilnahme-Statistik |
 
 ## Nicht-funktionale Anforderungen
 
