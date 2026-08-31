@@ -61,13 +61,10 @@ export function TurnierAnwesenheitPage() {
       {gesperrt && (
         <p className="mb-4 rounded-md bg-amber-50 px-3 py-2 text-sm text-amber-700 dark:bg-amber-950/40 dark:text-amber-300">
           Turnier ist beendet – Anwesenheit kann nur noch im{' '}
-          <Link
-            to={`/turniere/${turnier.id}/admin`}
-            className="font-medium underline"
-          >
+          <Link to="/admin" className="font-medium underline">
             Admin-Bereich
           </Link>{' '}
-          korrigiert werden.
+          (Hauptnavigation) korrigiert werden.
         </p>
       )}
 

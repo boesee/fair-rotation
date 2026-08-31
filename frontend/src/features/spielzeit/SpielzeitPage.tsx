@@ -38,11 +38,37 @@ export function SpielzeitPage() {
   const [zuteilung, setZuteilung] = useState<Zuteilung[]>([])
   const [spieler, setSpieler] = useState<Spieler[]>([])
   const [einsaetze, setEinsaetze] = useState<Einsatz[]>([])
+  // UX-Feedback: die Reihenfolge (FR-32) darf sich nicht mitten in einer
+  // Aktion verschieben, nur weil der Live-Timer tickt – sonst landet der
+  // Tap womöglich auf dem falschen Spieler. Reihenfolge wird deshalb nur bei
+  // echten Datenänderungen (laden()) neu berechnet, nicht jede Sekunde; die
+  // angezeigten Zeiten selbst ticken trotzdem live weiter.
+  const [reihenfolge, setReihenfolge] = useState<Record<string, string[]>>({})
 
   const [ladeFehler, setLadeFehler] = useState<string | null>(null)
   const [aktionFehler, setAktionFehler] = useState<string | null>(null)
+  const [mehrfachModus, setMehrfachModus] = useState(false)
   const [ausgewaehlt, setAusgewaehlt] = useState<Set<string>>(new Set())
   const [, setTick] = useState(0)
+
+  function berechneGesamtSekunden(spielerId: string, einsaetzeStand: Einsatz[]): number {
+    const eigene = einsaetzeStand.filter((e) => e.spieler_id === spielerId)
+    const kumuliert = eigene
+      .filter((e) => e.ausgewechselt_um !== null)
+      .reduce(
+        (sum, e) =>
+          sum +
+          (new Date(e.ausgewechselt_um as string).getTime() -
+            new Date(e.eingewechselt_um).getTime()) /
+            1000,
+        0,
+      )
+    const offen = eigene.find((e) => e.ausgewechselt_um === null)
+    const laufend = offen
+      ? (Date.now() - new Date(offen.eingewechselt_um).getTime()) / 1000
+      : 0
+    return kumuliert + laufend
+  }
 
   async function laden() {
     if (!spielId) return
@@ -56,11 +82,20 @@ export function SpielzeitPage() {
       ])
       const s = await listSpielerByIds(z.map((x) => x.spieler_id))
 
+      const neueReihenfolge: Record<string, string[]> = {}
+      f.forEach((feld) => {
+        neueReihenfolge[feld.id] = z
+          .filter((x) => x.feld_id === feld.id)
+          .map((x) => x.spieler_id)
+          .sort((a, b) => berechneGesamtSekunden(b, e) - berechneGesamtSekunden(a, e))
+      })
+
       setDaten(d)
       setFelder(f)
       setZuteilung(z)
       setEinsaetze(e)
       setSpieler(s)
+      setReihenfolge(neueReihenfolge)
       setLadeFehler(null)
     } catch {
       setLadeFehler('Keine Verbindung – bitte Seite neu laden.')
@@ -92,37 +127,19 @@ export function SpielzeitPage() {
     s.vorname + (s.nachname_initiale ? ` ${s.nachname_initiale}.` : '')
 
   function eintraegeFuerFeld(feldId: string): Eintrag[] {
-    const liste: Eintrag[] = zuteilung
-      .filter((z) => z.feld_id === feldId)
-      .map((z) => spielerMap.get(z.spieler_id))
+    return (reihenfolge[feldId] ?? [])
+      .map((spielerId) => spielerMap.get(spielerId))
       .filter((s): s is Spieler => s !== undefined)
       .map((s) => {
-        const eigeneEinsaetze = einsaetze.filter((e) => e.spieler_id === s.id)
-        const offenerEinsatz = eigeneEinsaetze.find(
-          (e) => e.ausgewechselt_um === null,
+        const offenerEinsatz = einsaetze.find(
+          (e) => e.spieler_id === s.id && e.ausgewechselt_um === null,
         )
-        const kumuliertSekunden = eigeneEinsaetze
-          .filter((e) => e.ausgewechselt_um !== null)
-          .reduce(
-            (sum, e) =>
-              sum +
-              (new Date(e.ausgewechselt_um as string).getTime() -
-                new Date(e.eingewechselt_um).getTime()) /
-                1000,
-            0,
-          )
-        const laufendSekunden = offenerEinsatz
-          ? (Date.now() - new Date(offenerEinsatz.eingewechselt_um).getTime()) /
-            1000
-          : 0
         return {
           spieler: s,
           offenerEinsatz,
-          gesamtSekunden: kumuliertSekunden + laufendSekunden,
+          gesamtSekunden: berechneGesamtSekunden(s.id, einsaetze),
         }
       })
-
-    return liste.sort((a, b) => b.gesamtSekunden - a.gesamtSekunden)
   }
 
   function laengsterAktiverSpielerId(liste: Eintrag[]): string | null {
@@ -194,6 +211,11 @@ export function SpielzeitPage() {
     }
   }
 
+  function toggleMehrfachModus() {
+    setAusgewaehlt(new Set())
+    setMehrfachModus((v) => !v)
+  }
+
   function toggleAuswahl(spielerId: string) {
     setAusgewaehlt((s) => {
       const neu = new Set(s)
@@ -229,6 +251,7 @@ export function SpielzeitPage() {
     try {
       await wechsleMehrere(auswechselnIds, einwechselnEintraege)
       setAusgewaehlt(new Set())
+      setMehrfachModus(false)
       await laden()
     } catch {
       setAktionFehler('Keine Verbindung – bitte erneut versuchen.')
@@ -276,7 +299,7 @@ export function SpielzeitPage() {
   const beendet = spiel.status === 'beendet'
 
   return (
-    <div>
+    <div className={mehrfachModus ? 'pb-20' : undefined}>
       <Link
         to={`/turniere/${turnier.id}`}
         className="mb-4 inline-block text-sm text-slate-500 dark:text-slate-400"
@@ -307,14 +330,26 @@ export function SpielzeitPage() {
           >
             Alle einwechseln
           </button>
-          {ausgewaehlt.size > 0 && (
-            <button
-              onClick={handleMehrereWechseln}
-              className="rounded-md border border-slate-900 px-4 py-2 text-base font-medium text-slate-900 dark:border-slate-100 dark:text-slate-100"
+          <button
+            onClick={toggleMehrfachModus}
+            className="rounded-md border border-slate-300 px-4 py-2 text-base font-medium text-slate-700 dark:border-slate-600 dark:text-slate-300"
+          >
+            {mehrfachModus ? 'Fertig' : 'Mehrere wechseln'}
+          </button>
+        </div>
+      )}
+
+      {felder.length > 1 && (
+        <div className="mb-2 flex gap-4 text-sm">
+          {felder.map((f) => (
+            <a
+              key={f.id}
+              href={`#feld-${f.id}`}
+              className="font-medium text-slate-700 underline dark:text-slate-300"
             >
-              {ausgewaehlt.size} wechseln
-            </button>
-          )}
+              ↓ {f.bezeichnung}
+            </a>
+          ))}
         </div>
       )}
 
@@ -324,59 +359,66 @@ export function SpielzeitPage() {
           const laengsterId = laengsterAktiverSpielerId(eintraege)
 
           return (
-            <div key={feld.id} className="rounded-lg bg-white p-4 shadow-sm dark:bg-slate-800">
+            <div
+              key={feld.id}
+              id={`feld-${feld.id}`}
+              className="scroll-mt-4 rounded-lg bg-white p-4 shadow-sm dark:bg-slate-800"
+            >
               <h2 className="mb-3 text-sm font-semibold text-slate-900 dark:text-slate-100">
                 {feld.bezeichnung}
               </h2>
               <ul className="divide-y divide-slate-200 dark:divide-slate-700">
-                {eintraege.map((eintrag) => (
-                  <li
-                    key={eintrag.spieler.id}
-                    className="flex items-center justify-between gap-2 py-2"
-                  >
-                    <div className="flex items-center gap-3">
-                      {!beendet && (
-                        <input
-                          type="checkbox"
-                          checked={ausgewaehlt.has(eintrag.spieler.id)}
-                          onChange={() => toggleAuswahl(eintrag.spieler.id)}
-                          className="h-5 w-5"
-                          title="Für Mehrfachwechsel auswählen"
-                        />
-                      )}
-                      <div>
-                        <span className="text-slate-900 dark:text-slate-100">
-                          {nameVon(eintrag.spieler)}
-                          {eintrag.spieler.id === laengsterId && ' ⏱'}
-                        </span>
-                        <div className="text-xs text-slate-500 dark:text-slate-400">
-                          {formatZeit(eintrag.gesamtSekunden)}
-                          {eintrag.offenerEinsatz ? ' · aktiv' : ' · Bank'}
+                {eintraege.map((eintrag) => {
+                  const langsam = eintrag.spieler.id === laengsterId
+                  return (
+                    <li
+                      key={eintrag.spieler.id}
+                      className={`flex items-center justify-between gap-2 py-2 ${
+                        langsam ? 'rounded-md bg-amber-50 px-2 dark:bg-amber-950/30' : ''
+                      }`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div>
+                          <span className="text-slate-900 dark:text-slate-100">
+                            {nameVon(eintrag.spieler)}
+                            {langsam && ' ⏱'}
+                          </span>
+                          <div className="text-xs text-slate-500 dark:text-slate-400">
+                            {formatZeit(eintrag.gesamtSekunden)}
+                            {eintrag.offenerEinsatz ? ' · aktiv' : ' · Bank'}
+                          </div>
                         </div>
                       </div>
-                    </div>
-                    {!beendet &&
-                      (eintrag.offenerEinsatz ? (
-                        <button
-                          onClick={() =>
-                            handleAuswechseln(eintrag.offenerEinsatz!.id)
-                          }
-                          className="rounded-md border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 dark:border-slate-600 dark:text-slate-300"
-                        >
-                          Auswechseln
-                        </button>
-                      ) : (
-                        <button
-                          onClick={() =>
-                            handleEinwechseln(eintrag.spieler.id, feld.id)
-                          }
-                          className="rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white"
-                        >
-                          Einwechseln
-                        </button>
-                      ))}
-                  </li>
-                ))}
+                      {!beendet &&
+                        (mehrfachModus ? (
+                          <input
+                            type="checkbox"
+                            checked={ausgewaehlt.has(eintrag.spieler.id)}
+                            onChange={() => toggleAuswahl(eintrag.spieler.id)}
+                            className="h-6 w-6"
+                          />
+                        ) : eintrag.offenerEinsatz ? (
+                          <button
+                            onClick={() =>
+                              handleAuswechseln(eintrag.offenerEinsatz!.id)
+                            }
+                            className="rounded-md border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 dark:border-slate-600 dark:text-slate-300"
+                          >
+                            Auswechseln
+                          </button>
+                        ) : (
+                          <button
+                            onClick={() =>
+                              handleEinwechseln(eintrag.spieler.id, feld.id)
+                            }
+                            className="rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white"
+                          >
+                            Einwechseln
+                          </button>
+                        ))}
+                    </li>
+                  )
+                })}
                 {eintraege.length === 0 && (
                   <li className="py-2 text-sm text-slate-500 dark:text-slate-400">
                     Keine Spieler zugeteilt.
@@ -395,6 +437,17 @@ export function SpielzeitPage() {
         >
           Spiel beenden
         </button>
+      )}
+
+      {mehrfachModus && ausgewaehlt.size > 0 && (
+        <div className="fixed inset-x-4 bottom-4 z-10 rounded-lg bg-slate-900 p-3 shadow-lg dark:bg-slate-700">
+          <button
+            onClick={handleMehrereWechseln}
+            className="w-full rounded-md bg-white px-4 py-3 text-base font-medium text-slate-900"
+          >
+            {ausgewaehlt.size} wechseln
+          </button>
+        </div>
       )}
     </div>
   )

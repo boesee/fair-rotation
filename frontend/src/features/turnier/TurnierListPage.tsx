@@ -63,29 +63,39 @@ export function TurnierListPage() {
 
       <form
         onSubmit={handleAnlegen}
-        className="mb-6 flex flex-wrap items-start gap-2 rounded-lg bg-white p-4 shadow-sm dark:bg-slate-800"
+        className="mb-6 flex flex-col gap-3 rounded-lg bg-white p-4 shadow-sm dark:bg-slate-800"
       >
-        <input
-          type="date"
-          value={datum}
-          onChange={(e) => setDatum(e.target.value)}
-          className="rounded-md border border-slate-300 bg-white px-3 py-2 text-base text-slate-900 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
-        />
-        <input
-          type="text"
-          placeholder="Bezeichnung"
-          value={bezeichnung}
-          onChange={(e) => setBezeichnung(e.target.value)}
-          className="rounded-md border border-slate-300 bg-white px-3 py-2 text-base text-slate-900 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
-        />
-        <label className="flex items-center gap-2 px-1 py-2 text-sm text-slate-700 dark:text-slate-300">
+        <div>
+          <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">
+            Datum
+          </label>
+          <input
+            type="date"
+            value={datum}
+            onChange={(e) => setDatum(e.target.value)}
+            className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-base text-slate-900 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
+          />
+        </div>
+        <div>
+          <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">
+            Bezeichnung
+          </label>
+          <input
+            type="text"
+            placeholder="z.B. Turnier Muri"
+            value={bezeichnung}
+            onChange={(e) => setBezeichnung(e.target.value)}
+            className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-base text-slate-900 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
+          />
+        </div>
+        <label className="flex items-center gap-2 text-sm text-slate-700 dark:text-slate-300">
           <input
             type="checkbox"
             checked={istTest}
             onChange={(e) => setIstTest(e.target.checked)}
             className="h-5 w-5"
           />
-          Test-Turnier
+          Test-Turnier (jederzeit vollständig löschbar)
         </label>
         <button
           type="submit"
@@ -94,7 +104,7 @@ export function TurnierListPage() {
           Turnier anlegen
         </button>
         {fehler && (
-          <p className="w-full text-sm text-red-600 dark:text-red-400">{fehler}</p>
+          <p className="text-sm text-red-600 dark:text-red-400">{fehler}</p>
         )}
       </form>
 

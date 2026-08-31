@@ -18,6 +18,7 @@ export function KaderPage() {
   const [initiale, setInitiale] = useState('')
   const [vornameFehler, setVornameFehler] = useState(false)
   const [dopplungWarnung, setDopplungWarnung] = useState<string | null>(null)
+  const [dopplungBestaetigen, setDopplungBestaetigen] = useState(false)
   const [speicherFehler, setSpeicherFehler] = useState<string | null>(null)
 
   const [bearbeiteId, setBearbeiteId] = useState<string | null>(null)
@@ -53,15 +54,21 @@ export function KaderPage() {
 
     const initialeWert = initiale.trim() || null
 
-    // UC-02/E2: Warnung bei Namensgleichheit, blockiert das Speichern nicht.
-    const dopplung = await findNamensdopplung(vorname.trim(), initialeWert)
-    if (dopplung && !dopplungWarnung) {
-      setDopplungWarnung(
-        'Es gibt bereits einen Spieler mit diesem Namen – Initiale ergänzen?',
-      )
-      return
+    // UC-02/E2: Warnung bei Namensgleichheit, blockiert das Speichern nicht
+    // – der Trainer bestätigt explizit über "Trotzdem hinzufügen" statt
+    // denselben Button ein zweites Mal zu tippen (war zuvor unklar).
+    if (!dopplungBestaetigen) {
+      const dopplung = await findNamensdopplung(vorname.trim(), initialeWert)
+      if (dopplung) {
+        setDopplungWarnung(
+          'Es gibt bereits einen Spieler mit diesem Namen – Initiale ergänzen?',
+        )
+        setDopplungBestaetigen(true)
+        return
+      }
     }
     setDopplungWarnung(null)
+    setDopplungBestaetigen(false)
 
     try {
       await addSpieler(vorname.trim(), initialeWert)
@@ -71,6 +78,11 @@ export function KaderPage() {
     } catch {
       setSpeicherFehler('Keine Verbindung – bitte erneut versuchen.')
     }
+  }
+
+  function handleDopplungAbbrechen() {
+    setDopplungWarnung(null)
+    setDopplungBestaetigen(false)
   }
 
   function starteBearbeitung(s: Spieler) {
@@ -137,17 +149,33 @@ export function KaderPage() {
           onChange={(e) => setInitiale(e.target.value)}
           className={`w-32 border-slate-300 dark:border-slate-600 ${eingabeKlasse}`}
         />
-        <button
-          type="submit"
-          className="rounded-md bg-slate-900 px-4 py-2 text-base font-medium text-white"
-        >
-          Hinzufügen
-        </button>
+        {!dopplungBestaetigen && (
+          <button
+            type="submit"
+            className="rounded-md bg-slate-900 px-4 py-2 text-base font-medium text-white"
+          >
+            Hinzufügen
+          </button>
+        )}
         {dopplungWarnung && (
-          <p className="w-full text-sm text-amber-600 dark:text-amber-400">
-            {dopplungWarnung} Erneut auf "Hinzufügen" tippen, um trotzdem zu
-            speichern.
-          </p>
+          <div className="w-full">
+            <p className="mb-2 text-sm text-amber-600 dark:text-amber-400">
+              {dopplungWarnung}
+            </p>
+            <button
+              type="submit"
+              className="mr-2 rounded-md bg-amber-600 px-4 py-2 text-sm font-medium text-white"
+            >
+              Trotzdem hinzufügen
+            </button>
+            <button
+              type="button"
+              onClick={handleDopplungAbbrechen}
+              className="rounded-md border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 dark:border-slate-600 dark:text-slate-300"
+            >
+              Abbrechen
+            </button>
+          </div>
         )}
         {speicherFehler && (
           <p className="w-full text-sm text-red-600 dark:text-red-400">{speicherFehler}</p>

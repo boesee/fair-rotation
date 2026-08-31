@@ -62,7 +62,7 @@ Entity-Modell und die Use-Case-Spezifikationen.
 
 | ID | Anforderung | Quelle (Vision) |
 |---|---|---|
-| FR-43 | Der Trainer kann in einem separaten Admin-Bereich pro Turnier nachträglich die Turnier-Anwesenheit sowie einzelne Einsätze (Ein-/Auswechselzeitpunkt) korrigieren, löschen oder fehlende Einsätze nacherfassen – auch nachdem das Turnier bzw. einzelne Spiele bereits `beendet` sind. Die kumulierte Spielzeit ergibt sich automatisch aus den korrigierten Einsätzen, kein eigenes Editierfeld dafür nötig. Der Admin-Bereich prüft bewusst keine Plausibilität (z.B. überlappende Einsätze desselben Spielers) – er ist explizit ein ungeschütztes Korrekturwerkzeug für Ausnahmefälle, kein regulärer Erfassungsweg. | Constraints: Bedienung unter Zeitdruck (NFR-1) führt zu Erfassungsfehlern, die nachträglich korrigierbar sein müssen |
+| FR-43 | Der Trainer kann über einen eigenen Menüpunkt in der Hauptnavigation einen Admin-Bereich öffnen, dort ein Turnier auswählen und darin nachträglich die Turnier-Anwesenheit sowie einzelne Einsätze (Ein-/Auswechselzeitpunkt) korrigieren, löschen oder fehlende Einsätze nacherfassen – auch nachdem das Turnier bzw. einzelne Spiele bereits `beendet` sind. Die kumulierte Spielzeit ergibt sich automatisch aus den korrigierten Einsätzen, kein eigenes Editierfeld dafür nötig. Der Admin-Bereich prüft bewusst keine Plausibilität (z.B. überlappende Einsätze desselben Spielers) – er ist explizit ein ungeschütztes Korrekturwerkzeug für Ausnahmefälle, kein regulärer Erfassungsweg. | Constraints: Bedienung unter Zeitdruck (NFR-1) führt zu Erfassungsfehlern, die nachträglich korrigierbar sein müssen |
 
 ## Nicht-funktionale Anforderungen
 

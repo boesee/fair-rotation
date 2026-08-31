@@ -2,22 +2,32 @@ import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { formatZeit } from '../spielzeit/spielzeitApi'
 import { getTurnier, type Turnier } from '../turnier/turnierApi'
-import { berechneStatistik, type SpielerStatistik } from './statistikApi'
+import {
+  berechneStatistik,
+  ermittleAusschluesse,
+  type SpielerStatistik,
+} from './statistikApi'
 
 export function StatistikPage() {
   const { turnierId } = useParams<{ turnierId?: string }>()
   const [turnier, setTurnier] = useState<Turnier | null>(null)
   const [statistik, setStatistik] = useState<SpielerStatistik[] | null>(null)
+  const [ausschluesse, setAusschluesse] = useState<{
+    laufendAnzahl: number
+    testAnzahl: number
+  } | null>(null)
   const [fehler, setFehler] = useState<string | null>(null)
 
   async function laden() {
     try {
-      const [s, t] = await Promise.all([
+      const [s, t, a] = await Promise.all([
         berechneStatistik(turnierId),
         turnierId ? getTurnier(turnierId) : Promise.resolve(null),
+        turnierId ? Promise.resolve(null) : ermittleAusschluesse(),
       ])
       setStatistik(s)
       setTurnier(t)
+      setAusschluesse(a)
       setFehler(null)
     } catch {
       // UC-06/E2
@@ -56,9 +66,28 @@ export function StatistikPage() {
           ← {turnier.bezeichnung}
         </Link>
       )}
-      <h1 className="mb-4 text-lg font-semibold text-slate-900 dark:text-slate-100">
+      <h1 className="mb-1 text-lg font-semibold text-slate-900 dark:text-slate-100">
         {turnier ? `Statistik – ${turnier.bezeichnung}` : 'Statistik – alle Turniere'}
       </h1>
+
+      {ausschluesse && (ausschluesse.laufendAnzahl > 0 || ausschluesse.testAnzahl > 0) && (
+        <p className="mb-4 text-xs text-slate-500 dark:text-slate-400">
+          {[
+            ausschluesse.laufendAnzahl > 0 &&
+              `${ausschluesse.laufendAnzahl} noch nicht abgeschlossene${
+                ausschluesse.laufendAnzahl === 1 ? 's' : ''
+              } Turnier${ausschluesse.laufendAnzahl === 1 ? '' : 'e'}`,
+            ausschluesse.testAnzahl > 0 &&
+              `${ausschluesse.testAnzahl} Test-Turnier${ausschluesse.testAnzahl === 1 ? '' : 'e'}`,
+          ]
+            .filter(Boolean)
+            .join(' und ')}{' '}
+          {ausschluesse.laufendAnzahl + ausschluesse.testAnzahl === 1
+            ? 'fehlt'
+            : 'fehlen'}{' '}
+          in dieser Übersicht.
+        </p>
+      )}
 
       {statistik.length === 0 ? (
         // UC-06/E1

@@ -4,7 +4,8 @@
 
 ## Kurzbeschreibung
 
-Ein separater, pro Turnier erreichbarer Admin-Bereich, in dem der Trainer
+Ein eigener Menüpunkt in der Hauptnavigation (neben Kader/Turniere/
+Statistik), in dem der Trainer zunächst ein Turnier auswählt und dann
 Erfassungsfehler nachträglich korrigiert: Turnier-Anwesenheit (auch nach
 Turnierabschluss, siehe UC-04a/E2) sowie einzelne Einsätze (Ein-/
 Auswechselzeitpunkt), inklusive Löschen und Nacherfassen fehlender
@@ -38,7 +39,8 @@ Trainer
 
 ## Hauptablauf (Basic Flow) – Einsatz-Zeitpunkt korrigieren
 
-1. Der Trainer öffnet ein Turnier und wählt "Admin".
+1. Der Trainer wählt "Admin" in der Hauptnavigation und darin ein
+   Turnier aus.
 2. Der Trainer wählt ein Spiel aus der Liste.
 3. Die App zeigt pro Feld dieses Spiels alle Einsätze mit Spielername,
    Ein- und Auswechselzeitpunkt.

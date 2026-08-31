@@ -9,23 +9,11 @@ import { KaderPage } from './features/kader/KaderPage'
 import { TurnierListPage } from './features/turnier/TurnierListPage'
 import { TurnierDetailPage } from './features/turnier/TurnierDetailPage'
 import { TurnierAnwesenheitPage } from './features/turnier/TurnierAnwesenheitPage'
-import { TurnierAdminPage } from './features/turnier/TurnierAdminPage'
 import { SpielVorbereitenPage } from './features/spiel-vorbereiten/SpielVorbereitenPage'
 import { SpielzeitPage } from './features/spielzeit/SpielzeitPage'
 import { StatistikPage } from './features/statistik/StatistikPage'
-
-function HauptUebersicht() {
-  return (
-    <div>
-      <h1 className="mb-2 text-lg font-semibold text-slate-900 dark:text-slate-100">
-        Spielzeit-Rotation
-      </h1>
-      <p className="text-sm text-slate-600 dark:text-slate-400">
-        Kader, Turniere und Statistik über die Navigation oben erreichbar.
-      </p>
-    </div>
-  )
-}
+import { AdminPage } from './features/admin/AdminPage'
+import { HomePage } from './features/home/HomePage'
 
 function GeschuetzterBereich({ children }: { children: React.ReactNode }) {
   return (
@@ -49,7 +37,7 @@ export default function App() {
             path="/"
             element={
               <GeschuetzterBereich>
-                <HauptUebersicht />
+                <HomePage />
               </GeschuetzterBereich>
             }
           />
@@ -86,14 +74,6 @@ export default function App() {
             }
           />
           <Route
-            path="/turniere/:turnierId/admin"
-            element={
-              <GeschuetzterBereich>
-                <TurnierAdminPage />
-              </GeschuetzterBereich>
-            }
-          />
-          <Route
             path="/turniere/:turnierId/statistik"
             element={
               <GeschuetzterBereich>
@@ -122,6 +102,14 @@ export default function App() {
             element={
               <GeschuetzterBereich>
                 <StatistikPage />
+              </GeschuetzterBereich>
+            }
+          />
+          <Route
+            path="/admin"
+            element={
+              <GeschuetzterBereich>
+                <AdminPage />
               </GeschuetzterBereich>
             }
           />

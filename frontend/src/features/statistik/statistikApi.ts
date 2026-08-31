@@ -13,24 +13,35 @@ export interface SpielerStatistik {
   anzahlTurniereAnwesend: number
 }
 
+export interface TurnierKlassifizierung {
+  abgeschlossenIds: string[]
+  laufendAnzahl: number
+  testAnzahl: number
+}
+
 // FR-29/FR-41: die turnieruebergreifende Statistik beruecksichtigt nur
 // Turniere, die (a) nicht als Test markiert sind (FR-28) und (b) als Ganzes
 // `beendet` sind (alle Spiele beendet, berechneTurnierStatus). Die
 // Einzelturnier-Ansicht (turnierId gesetzt) ist davon nicht betroffen – dort
 // bleiben bereits beendete Spiele eines noch laufenden Turniers sichtbar.
-async function listAbgeschlosseneNichtTestTurnierIds(): Promise<string[]> {
+// Zaehlt zusaetzlich, wieviele Turniere deswegen ausgeschlossen wurden
+// (UX-Feedback: Transparenz, warum eine Zahl niedriger wirkt als erwartet).
+async function klassifiziereTurniere(): Promise<TurnierKlassifizierung> {
   const { data: turniere, error: turniereError } = await supabase
     .from('turnier')
-    .select('id')
-    .eq('ist_test', false)
+    .select('id, ist_test')
   if (turniereError) throw turniereError
-  if (turniere.length === 0) return []
 
-  const turnierIds = turniere.map((t) => t.id)
+  const testAnzahl = turniere.filter((t) => t.ist_test).length
+  const nichtTestIds = turniere.filter((t) => !t.ist_test).map((t) => t.id)
+  if (nichtTestIds.length === 0) {
+    return { abgeschlossenIds: [], laufendAnzahl: 0, testAnzahl }
+  }
+
   const { data: spiele, error: spieleError } = await supabase
     .from('spiel')
     .select('turnier_id, status')
-    .in('turnier_id', turnierIds)
+    .in('turnier_id', nichtTestIds)
   if (spieleError) throw spieleError
 
   const spieleProTurnier = new Map<string, { status: SpielStatus }[]>()
@@ -40,9 +51,25 @@ async function listAbgeschlosseneNichtTestTurnierIds(): Promise<string[]> {
     spieleProTurnier.set(s.turnier_id, liste)
   })
 
-  return turnierIds.filter(
+  const abgeschlossenIds = nichtTestIds.filter(
     (id) => berechneTurnierStatus(spieleProTurnier.get(id) ?? []) === 'beendet',
   )
+
+  return {
+    abgeschlossenIds,
+    laufendAnzahl: nichtTestIds.length - abgeschlossenIds.length,
+    testAnzahl,
+  }
+}
+
+// Fuer die UI: wie viele Turniere fehlen in der turnieruebergreifenden
+// Statistik und warum (noch nicht vollstaendig beendet bzw. Test-Turnier).
+export async function ermittleAusschluesse(): Promise<{
+  laufendAnzahl: number
+  testAnzahl: number
+}> {
+  const { laufendAnzahl, testAnzahl } = await klassifiziereTurniere()
+  return { laufendAnzahl, testAnzahl }
 }
 
 async function listBeendeteSpielIdsFuerTurnier(turnierId: string): Promise<string[]> {
@@ -121,10 +148,10 @@ export async function berechneStatistik(
   if (turnierId) {
     spielIds = await listBeendeteSpielIdsFuerTurnier(turnierId)
   } else {
-    const erlaubteTurnierIds = await listAbgeschlosseneNichtTestTurnierIds()
+    const { abgeschlossenIds } = await klassifiziereTurniere()
     ;[spielIds, anwesenheitZaehlung] = await Promise.all([
-      listBeendeteSpielIdsFuerTurniere(erlaubteTurnierIds),
-      zaehleTurniereProSpieler(erlaubteTurnierIds),
+      listBeendeteSpielIdsFuerTurniere(abgeschlossenIds),
+      zaehleTurniereProSpieler(abgeschlossenIds),
     ])
   }
 

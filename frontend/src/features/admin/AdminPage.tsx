@@ -1,5 +1,4 @@
 import { useEffect, useState, type FormEvent } from 'react'
-import { Link, useParams } from 'react-router-dom'
 import { listSpielerByIds, type Spieler } from '../kader/kaderApi'
 import {
   listFelder,
@@ -14,8 +13,8 @@ import {
   updateEinsatzZeiten,
   type Einsatz,
 } from '../spielzeit/spielzeitApi'
-import { AnwesenheitEditor } from './AnwesenheitEditor'
-import { getTurnier, listSpiele, type Spiel, type Turnier } from './turnierApi'
+import { AnwesenheitEditor } from '../turnier/AnwesenheitEditor'
+import { listSpiele, listTurniere, type Spiel, type Turnier } from '../turnier/turnierApi'
 
 // <input type="datetime-local"> arbeitet mit lokaler Zeit ohne Zeitzonen-
 // Suffix; new Date(...) interpretiert einen solchen String als lokale Zeit,
@@ -288,45 +287,25 @@ function EinsaetzeAdmin({ spiel }: { spiel: Spiel }) {
   )
 }
 
-export function TurnierAdminPage() {
-  const { turnierId } = useParams<{ turnierId: string }>()
-  const [turnier, setTurnier] = useState<Turnier | null>(null)
+function TurnierAdmin({ turnier }: { turnier: Turnier }) {
   const [spiele, setSpiele] = useState<Spiel[]>([])
   const [ausgewaehltesSpielId, setAusgewaehltesSpielId] = useState('')
-  const [ladeFehler, setLadeFehler] = useState<string | null>(null)
+  const [fehler, setFehler] = useState<string | null>(null)
 
   useEffect(() => {
-    if (!turnierId) return
-    Promise.all([getTurnier(turnierId), listSpiele(turnierId)])
-      .then(([t, s]) => {
-        setTurnier(t)
-        setSpiele(s)
-      })
-      .catch(() => setLadeFehler('Keine Verbindung – bitte Seite neu laden.'))
-  }, [turnierId])
-
-  if (ladeFehler)
-    return <p className="text-sm text-red-600 dark:text-red-400">{ladeFehler}</p>
-  if (!turnier)
-    return <p className="text-sm text-slate-500 dark:text-slate-400">Lädt…</p>
+    setAusgewaehltesSpielId('')
+    listSpiele(turnier.id)
+      .then(setSpiele)
+      .catch(() => setFehler('Keine Verbindung – bitte erneut versuchen.'))
+  }, [turnier.id])
 
   const ausgewaehltesSpiel = spiele.find((s) => s.id === ausgewaehltesSpielId)
 
   return (
     <div>
-      <Link
-        to={`/turniere/${turnier.id}`}
-        className="mb-4 inline-block text-sm text-slate-500 dark:text-slate-400"
-      >
-        ← {turnier.bezeichnung}
-      </Link>
-      <h1 className="mb-1 text-lg font-semibold text-slate-900 dark:text-slate-100">
-        Admin
-      </h1>
-      <p className="mb-6 text-sm text-slate-500 dark:text-slate-400">
-        Nachträgliche Korrekturen – ohne Plausibilitätsprüfung, für den
-        Ausnahmefall.
-      </p>
+      {fehler && (
+        <p className="mb-4 text-sm text-red-600 dark:text-red-400">{fehler}</p>
+      )}
 
       <h2 className="mb-2 text-sm font-semibold text-slate-900 dark:text-slate-100">
         Anwesenheit korrigieren
@@ -352,6 +331,51 @@ export function TurnierAdminPage() {
       </select>
 
       {ausgewaehltesSpiel && <EinsaetzeAdmin spiel={ausgewaehltesSpiel} />}
+    </div>
+  )
+}
+
+export function AdminPage() {
+  const [turniere, setTurniere] = useState<Turnier[]>([])
+  const [ausgewaehltesTurnierId, setAusgewaehltesTurnierId] = useState('')
+  const [ladeFehler, setLadeFehler] = useState<string | null>(null)
+
+  useEffect(() => {
+    listTurniere()
+      .then(setTurniere)
+      .catch(() => setLadeFehler('Keine Verbindung – bitte Seite neu laden.'))
+  }, [])
+
+  if (ladeFehler)
+    return <p className="text-sm text-red-600 dark:text-red-400">{ladeFehler}</p>
+
+  const ausgewaehltesTurnier = turniere.find((t) => t.id === ausgewaehltesTurnierId)
+
+  return (
+    <div>
+      <h1 className="mb-1 text-lg font-semibold text-slate-900 dark:text-slate-100">
+        Admin
+      </h1>
+      <p className="mb-6 text-sm text-slate-500 dark:text-slate-400">
+        Nachträgliche Korrekturen – ohne Plausibilitätsprüfung, für den
+        Ausnahmefall.
+      </p>
+
+      <select
+        value={ausgewaehltesTurnierId}
+        onChange={(e) => setAusgewaehltesTurnierId(e.target.value)}
+        className="mb-6 rounded-md border border-slate-300 bg-white px-3 py-2 text-base text-slate-900 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
+      >
+        <option value="">Turnier wählen…</option>
+        {turniere.map((t) => (
+          <option key={t.id} value={t.id}>
+            {t.datum} · {t.bezeichnung}
+            {t.ist_test ? ' (Test)' : ''}
+          </option>
+        ))}
+      </select>
+
+      {ausgewaehltesTurnier && <TurnierAdmin turnier={ausgewaehltesTurnier} />}
     </div>
   )
 }

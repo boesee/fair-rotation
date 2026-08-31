@@ -39,6 +39,9 @@ export function Layout({ children }: { children: ReactNode }) {
           <NavLink to="/statistik" className={navItemClass}>
             Statistik
           </NavLink>
+          <NavLink to="/admin" className={navItemClass}>
+            Admin
+          </NavLink>
         </div>
         <div className="flex items-center gap-1">
           <button
