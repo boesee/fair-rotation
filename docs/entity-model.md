@@ -66,12 +66,18 @@ Jederzeit nachträglich änderbar, unabhängig vom Status einzelner Spiele
 (FR-27). Getrennt von der Feldzuteilung, weil Zuteilung pro Spiel erfolgt
 und bei 6vs6 keine manuelle Zuteilung nötig ist.
 
+UI-seitig invertiert (der Trainer markiert, wer **fehlt**, Standardannahme
+ist Teilnahme des ganzen aktiven Kaders) – am gespeicherten Attribut
+`anwesend` (weiterhin "ist dabei", nicht "fehlt") ändert das nichts, nur an
+der Erfassungsreihenfolge in UC-04a.
+
 | Attribut | Typ | Beschreibung |
 |---|---|---|
 | id | UUID | Primärschlüssel |
 | turnier_id | FK → Turnier | |
 | spieler_id | FK → Spieler | |
 | anwesend | boolean | |
+| abwesend_grund | enum(`kader_voll`, `privat`), nullable | Nur gesetzt, wenn `anwesend = false` (FR-44). Unterscheidet Kader-Fairness-relevante Abwesenheit von rein privaten Gründen. |
 
 *Unique Constraint: (turnier_id, spieler_id) – ein Spieler ist pro Turnier
 höchstens einmal erfasst.*

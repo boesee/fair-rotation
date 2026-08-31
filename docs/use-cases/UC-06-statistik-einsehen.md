@@ -1,13 +1,15 @@
 # UC-06: Statistik einsehen
 
-**Abgedeckte Anforderungen:** FR-40, FR-41, FR-42, FR-29
+**Abgedeckte Anforderungen:** FR-40, FR-41, FR-42, FR-44, FR-29
 
 ## Kurzbeschreibung
 
 Der Trainer sieht die kumulierte Spielzeit je Spieler – sowohl für ein
 einzelnes Turnier als auch turnierübergreifend über die gesamte erfasste
 Historie. Bei der turnierübergreifenden Ansicht zusätzlich, an wie vielen
-Turnieren der Spieler anwesend war (FR-42). Eine Kennzahl auf Spiel-Ebene
+Turnieren der Spieler anwesend war (FR-42) sowie, bei wie vielen davon er
+speziell wegen vollem Kader nicht dabei war (FR-44, als Grundlage für eine
+faire Kader-Auswahl künftiger Turniere). Eine Kennzahl auf Spiel-Ebene
 (Anzahl Spiele mit tatsächlicher Einsatzzeit) ist bewusst nicht Teil
 dieser Ansicht, seit Anwesenheit turnierweit statt pro Spiel erfasst wird
 (UC-04a) – sie wäre für den Trainer keine zusätzliche Information mehr.
@@ -59,9 +61,13 @@ Trainer
    mit Historie, vgl. UC-02) die kumulierte Spielzeit über alle beendeten
    Spiele dieser berücksichtigten Turniere hinweg.
 4. Die App berechnet zusätzlich je Spieler die Anzahl dieser
-   berücksichtigten Turniere mit erfasster Anwesenheit (FR-42).
+   berücksichtigten Turniere mit erfasster Anwesenheit (FR-42) sowie,
+   unabhängig vom Turnier-Status, die Anzahl nicht als Test markierter
+   Turniere mit Grund "Kader war voll" (FR-44) – Letzteres auch für noch
+   `geplante`/`laufende` Turniere, da es eine Kader-Fairness-Kennzahl und
+   kein Spielergebnis ist.
 5. Die App zeigt die Spieler absteigend nach kumulierter Gesamt-Spielzeit
-   sortiert, mit der Anzahl-Turniere-Spalte zusätzlich.
+   sortiert, mit beiden Zusatzspalten.
 
 ## Ausnahmeabläufe
 
@@ -88,3 +94,5 @@ Beim Laden der Statistik: Supabase nicht erreichbar.
 | T6 | Statistik-Ansicht ohne Netzwerkverbindung öffnen | Fehlermeldung mit Wiederholungsmöglichkeit (E2) |
 | T7 | Statistik nach Deaktivierung eines Spielers (UC-02, A2) turnierübergreifend aufrufen | Der deaktivierte Spieler erscheint weiterhin mit seinen historischen Werten (Bezug FR-40/41, konsistent mit UC-02/T7) |
 | T8 | Turnierübergreifende Statistik nach Abschluss eines Test-Turniers (FR-28) aufrufen | Das Test-Turnier fliesst nicht ein, auch wenn es vollständig `beendet` ist (A1, Schritt 2) |
+| T9 | Turnierübergreifende Statistik aufrufen, während ein noch `geplantes` Turnier bereits mit Grund "Kader war voll" für einen Spieler erfasst ist | Die Kader-voll-Zählung dieses Spielers berücksichtigt das Turnier trotzdem, obwohl es nicht `beendet` ist (A1, Schritt 4) |
+| T10 | Turnierübergreifende Statistik aufrufen, wenn ein Spieler zweimal mit Grund "privat verhindert" und einmal mit "Kader war voll" fehlte | Kader-voll-Zählung zeigt 1, nicht 3 (A1, Schritt 4) |

@@ -96,11 +96,15 @@ create policy "authenticated full access" on public.feld
 -- wiederholt. Die Feldzuteilung (siehe zuteilung) waehlt pro Spiel aus
 -- dieser Turnier-weiten Liste aus.
 create table public.anwesenheit (
-  id          uuid primary key default gen_random_uuid(),
-  turnier_id  uuid not null references public.turnier(id) on delete cascade,
-  spieler_id  uuid not null references public.spieler(id) on delete restrict,
-  anwesend    boolean not null,
-  created_at  timestamptz not null default now(),
+  id              uuid primary key default gen_random_uuid(),
+  turnier_id      uuid not null references public.turnier(id) on delete cascade,
+  spieler_id      uuid not null references public.spieler(id) on delete restrict,
+  anwesend        boolean not null,
+  -- FR-42b: nur gesetzt, wenn anwesend = false. Unterscheidet Kader-
+  -- Fairness-relevante Abwesenheit ('kader_voll') von rein privaten
+  -- Gruenden, die nicht in die Kader-Auswahl-Statistik einfliessen sollen.
+  abwesend_grund  text check (abwesend_grund in ('kader_voll', 'privat')),
+  created_at      timestamptz not null default now(),
   unique (turnier_id, spieler_id)
 );
 

@@ -54,8 +54,9 @@ export function TurnierAnwesenheitPage() {
         Anwesenheit
       </h1>
       <p className="mb-4 text-sm text-slate-500 dark:text-slate-400">
-        Gilt für alle Spiele dieses Turniers und kann bis zum Turnierabschluss
-        jederzeit angepasst werden.
+        Standardmässig gilt der ganze aktive Kader als dabei – markiere nur,
+        wer bei diesem Turnier fehlt. Gilt für alle Spiele dieses Turniers
+        und kann bis zum Turnierabschluss jederzeit angepasst werden.
       </p>
 
       {gesperrt && (

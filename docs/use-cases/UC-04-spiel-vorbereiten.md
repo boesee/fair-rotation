@@ -119,15 +119,21 @@ erfasst).
 
 # UC-04a: Turnier-Anwesenheit erfassen
 
-**Abgedeckte Anforderungen:** FR-22, FR-27, FR-29
+**Abgedeckte Anforderungen:** FR-22, FR-27, FR-29, FR-44
 
 ## Kurzbeschreibung
 
-Der Trainer markiert, welche Kaderspieler an einem Turniertag anwesend
-sind. Diese Anwesenheit gilt für alle Spiele des Turniers und ist die
+Der Trainer markiert, welche Kaderspieler an einem Turniertag **fehlen**
+(nicht: wer da ist) – die Standardannahme ist, dass der ganze aktive
+Kader teilnimmt, da für 3vs3/6vs6 ohnehin nur eine Teilmenge sinnvoll ist
+und Ausfälle oft schon Tage vorher bekannt sind. Für jeden markierten
+Spieler wird zusätzlich ein Grund erfasst: "privat verhindert" oder
+"Kader war voll" – Letzteres fliesst in die Kader-Fairness-Statistik
+(FR-44, UC-06) ein, damit über mehrere Turniere hinweg fair entschieden
+werden kann, wer beim nächsten Mal Vorrang hat. Das Ergebnis ist die
 Kandidatenliste für die Feldzuteilung in UC-04. Nachträglich änderbar
-(z.B. Spieler kommt später dazu), unabhängig vom Status einzelner Spiele –
-bis das Turnier als Ganzes `beendet` ist (FR-29). Danach ist eine
+(z.B. Spieler sagt kurzfristig ab), unabhängig vom Status einzelner Spiele
+– bis das Turnier als Ganzes `beendet` ist (FR-29). Danach ist eine
 Korrektur nur noch über den Admin-Bereich möglich (UC-07).
 
 ## Primärer Akteur
@@ -142,18 +148,21 @@ Trainer
 ## Nachbedingungen (Erfolg)
 
 - Für jeden aktiven Kaderspieler ist ein Anwesenheit-Datensatz für dieses
-  Turnier erfasst (anwesend = true/false).
+  Turnier erfasst (anwesend = true/false; bei false zusätzlich ein Grund).
 
 ## Hauptablauf (Basic Flow)
 
 1. Der Trainer öffnet ein Turnier und wählt "Anwesenheit".
 2. Die App zeigt die Liste der aktiven Kaderspieler, jeweils mit einer
-   Markierung "anwesend" (vorausgefüllt mit dem zuletzt gespeicherten
-   Stand, falls vorhanden).
-3. Der Trainer markiert die anwesenden Spieler.
+   Markierung "fehlt" (vorausgefüllt mit dem zuletzt gespeicherten Stand,
+   falls vorhanden; standardmässig nicht markiert = anwesend).
+3. Der Trainer markiert die fehlenden Spieler und wählt je einen Grund
+   ("privat verhindert" – voreingestellt – oder "Kader war voll").
 4. Der Trainer bestätigt.
 5. Die App speichert für jeden aktiven Kaderspieler einen
-   Anwesenheit-Datensatz für dieses Turnier (FR-22).
+   Anwesenheit-Datensatz für dieses Turnier (FR-22): `anwesend = false`
+   plus Grund für die markierten Spieler, `anwesend = true` für alle
+   anderen.
 
 ## Alternativabläufe
 
@@ -185,7 +194,8 @@ Bei Schritt 1 des Basic Flow bzw. von A1: Der Turnier-Status ist
 
 | # | Szenario | Erwartetes Ergebnis |
 |---|---|---|
-| T1 | Anwesenheit für ein neues Turnier erfassen | Anwesenheit-Datensätze für alle aktiven Kaderspieler gespeichert (Basic Flow) |
-| T2 | Anwesenheit für ein Turnier nachträglich ändern, während ein Spiel bereits `beendet`, aber nicht alle Spiele beendet sind | Änderung wird gespeichert, betrifft nur künftige Feldzuteilungen (A1) |
-| T3 | Anwesenheit speichern ohne Netzwerkverbindung | Fehlermeldung, Eingabe bleibt erhalten (E1) |
-| T4 | Anwesenheits-Erfassung öffnen, nachdem das letzte Spiel des Turniers beendet wurde | Nur lesende Ansicht mit Verweis auf Admin-Bereich, keine Speichern-Möglichkeit (E2) |
+| T1 | Anwesenheit für ein neues Turnier speichern, ohne jemanden zu markieren | Alle aktiven Kaderspieler werden als `anwesend = true` gespeichert (Basic Flow, Standardannahme) |
+| T2 | Zwei Spieler als fehlend markieren, einen mit Grund "privat verhindert", einen mit "Kader war voll" | Beide werden als `anwesend = false` mit dem jeweils gewählten Grund gespeichert (Basic Flow) |
+| T3 | Anwesenheit für ein Turnier nachträglich ändern, während ein Spiel bereits `beendet`, aber nicht alle Spiele beendet sind | Änderung wird gespeichert, betrifft nur künftige Feldzuteilungen (A1) |
+| T4 | Anwesenheit speichern ohne Netzwerkverbindung | Fehlermeldung, Eingabe bleibt erhalten (E1) |
+| T5 | Anwesenheits-Erfassung öffnen, nachdem das letzte Spiel des Turniers beendet wurde | Nur lesende Ansicht mit Verweis auf Admin-Bereich, keine Speichern-Möglichkeit (E2) |

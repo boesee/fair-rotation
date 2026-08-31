@@ -11,6 +11,11 @@ export interface SpielerStatistik {
   // Nur bei der turnieruebergreifenden Ansicht (turnierId nicht gesetzt)
   // ermittelt, sonst 0 (ohne fachliche Bedeutung fuer ein einzelnes Turnier).
   anzahlTurniereAnwesend: number
+  // Wie anzahlTurniereAnwesend: nur turnieruebergreifend ermittelt. Zaehlt
+  // Turniere mit abwesend_grund='kader_voll' (Kader-Fairness, FR-42b) –
+  // bewusst unabhaengig vom Turnier-Status, da eine Rosterentscheidung kein
+  // Spielergebnis ist und schon vor Turnierbeginn feststeht.
+  anzahlKaderVoll: number
 }
 
 export interface TurnierKlassifizierung {
@@ -135,6 +140,34 @@ async function zaehleTurniereProSpieler(
   )
 }
 
+// FR-42b: zaehlt je Spieler, bei wie vielen (nicht-Test-)Turnieren er wegen
+// vollem Kader zuhause bleiben musste – unabhaengig vom Turnier-Status, im
+// Unterschied zu zaehleTurniereProSpieler.
+async function zaehleKaderVollProSpieler(): Promise<Map<string, number>> {
+  const { data: turniere, error: turniereError } = await supabase
+    .from('turnier')
+    .select('id')
+    .eq('ist_test', false)
+  if (turniereError) throw turniereError
+  if (turniere.length === 0) return new Map()
+
+  const { data, error } = await supabase
+    .from('anwesenheit')
+    .select('spieler_id')
+    .eq('abwesend_grund', 'kader_voll')
+    .in(
+      'turnier_id',
+      turniere.map((t) => t.id),
+    )
+  if (error) throw error
+
+  const zaehlung = new Map<string, number>()
+  data.forEach((row) => {
+    zaehlung.set(row.spieler_id, (zaehlung.get(row.spieler_id) ?? 0) + 1)
+  })
+  return zaehlung
+}
+
 // UC-06 (FR-40/41): aggregiert kumulierte Spielzeit ausschliesslich auf
 // Basis beendeter Spiele. turnierId gesetzt -> Basic Flow (ein Turnier),
 // sonst A1 (turnieruebergreifend, nur vollstaendig beendete Nicht-Test-
@@ -144,14 +177,16 @@ export async function berechneStatistik(
 ): Promise<SpielerStatistik[]> {
   let spielIds: string[]
   let anwesenheitZaehlung = new Map<string, number>()
+  let kaderVollZaehlung = new Map<string, number>()
 
   if (turnierId) {
     spielIds = await listBeendeteSpielIdsFuerTurnier(turnierId)
   } else {
     const { abgeschlossenIds } = await klassifiziereTurniere()
-    ;[spielIds, anwesenheitZaehlung] = await Promise.all([
+    ;[spielIds, anwesenheitZaehlung, kaderVollZaehlung] = await Promise.all([
       listBeendeteSpielIdsFuerTurniere(abgeschlossenIds),
       zaehleTurniereProSpieler(abgeschlossenIds),
+      zaehleKaderVollProSpieler(),
     ])
   }
 
@@ -181,8 +216,14 @@ export async function berechneStatistik(
         name: s.vorname + (s.nachname_initiale ? ` ${s.nachname_initiale}.` : ''),
         kumulierteSekunden,
         anzahlTurniereAnwesend: anwesenheitZaehlung.get(s.id) ?? 0,
+        anzahlKaderVoll: kaderVollZaehlung.get(s.id) ?? 0,
       }
     })
-    .filter((s) => s.kumulierteSekunden > 0 || s.anzahlTurniereAnwesend > 0)
+    .filter(
+      (s) =>
+        s.kumulierteSekunden > 0 ||
+        s.anzahlTurniereAnwesend > 0 ||
+        s.anzahlKaderVoll > 0,
+    )
     .sort((a, b) => b.kumulierteSekunden - a.kumulierteSekunden)
 }
