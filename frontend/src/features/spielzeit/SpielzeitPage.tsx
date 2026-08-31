@@ -7,6 +7,13 @@ import {
   type Turnier,
 } from '../turnier/turnierApi'
 import {
+  listRotationsblockMitglieder,
+  listRotationsbloecke,
+  loescheRotationsblock,
+  speichereRotationsblock,
+  type Rotationsblock,
+} from '../turnier/rotationsblockApi'
+import {
   listFelder,
   listZuteilung,
   type Feld,
@@ -49,6 +56,10 @@ export function SpielzeitPage() {
   const [aktionFehler, setAktionFehler] = useState<string | null>(null)
   const [mehrfachModus, setMehrfachModus] = useState(false)
   const [ausgewaehlt, setAusgewaehlt] = useState<Set<string>>(new Set())
+  const [bloecke, setBloecke] = useState<Rotationsblock[]>([])
+  const [blockMitglieder, setBlockMitglieder] = useState<Map<string, Set<string>>>(
+    new Map(),
+  )
   const [, setTick] = useState(0)
 
   function berechneGesamtSekunden(spielerId: string, einsaetzeStand: Einsatz[]): number {
@@ -82,6 +93,14 @@ export function SpielzeitPage() {
       ])
       const s = await listSpielerByIds(z.map((x) => x.spieler_id))
 
+      const bl = await listRotationsbloecke(d.turnier.id)
+      const mitglieder = await listRotationsblockMitglieder(bl.map((b) => b.id))
+      const neueBlockMitglieder = new Map<string, Set<string>>()
+      bl.forEach((b) => neueBlockMitglieder.set(b.id, new Set()))
+      mitglieder.forEach((m) => {
+        neueBlockMitglieder.get(m.rotationsblock_id)?.add(m.spieler_id)
+      })
+
       const neueReihenfolge: Record<string, string[]> = {}
       f.forEach((feld) => {
         neueReihenfolge[feld.id] = z
@@ -96,6 +115,8 @@ export function SpielzeitPage() {
       setEinsaetze(e)
       setSpieler(s)
       setReihenfolge(neueReihenfolge)
+      setBloecke(bl)
+      setBlockMitglieder(neueBlockMitglieder)
       setLadeFehler(null)
     } catch {
       setLadeFehler('Keine Verbindung – bitte Seite neu laden.')
@@ -225,6 +246,46 @@ export function SpielzeitPage() {
     })
   }
 
+  // FR-45: Block-Chip waehlt/entwaehlt alle Mitglieder auf einmal – spart
+  // das erneute manuelle Anhaken derselben, ueber das Turnier stabilen
+  // Rotationsgruppe bei jedem Spiel.
+  function toggleBlock(blockId: string) {
+    const mitglieder = blockMitglieder.get(blockId) ?? new Set()
+    const alleAusgewaehlt = [...mitglieder].every((id) => ausgewaehlt.has(id))
+    setAusgewaehlt((s) => {
+      const neu = new Set(s)
+      mitglieder.forEach((id) => {
+        if (alleAusgewaehlt) neu.delete(id)
+        else neu.add(id)
+      })
+      return neu
+    })
+  }
+
+  async function handleAlsBlockSpeichern() {
+    const name = prompt('Name für diesen Block (z.B. "Block A1"):')
+    if (!name || name.trim().length === 0) return
+
+    setAktionFehler(null)
+    try {
+      await speichereRotationsblock(turnier.id, name.trim(), [...ausgewaehlt])
+      await laden()
+    } catch {
+      setAktionFehler('Keine Verbindung – bitte erneut versuchen.')
+    }
+  }
+
+  async function handleBlockLoeschen(blockId: string, bezeichnung: string) {
+    if (!confirm(`Block "${bezeichnung}" löschen?`)) return
+    setAktionFehler(null)
+    try {
+      await loescheRotationsblock(blockId)
+      await laden()
+    } catch {
+      setAktionFehler('Keine Verbindung – bitte erneut versuchen.')
+    }
+  }
+
   // Mehrfachauswahl-Blockwechsel (Feldtest-Feedback): mehrere Bank- und
   // aktive Spieler markieren, dann in einem Tap alle gleichzeitig tauschen
   // – statt jeden einzeln ein-/auszuwechseln.
@@ -339,6 +400,40 @@ export function SpielzeitPage() {
         </div>
       )}
 
+      {mehrfachModus && bloecke.length > 0 && (
+        <div className="mb-4 flex flex-wrap gap-2">
+          {bloecke.map((block) => {
+            const mitglieder = blockMitglieder.get(block.id) ?? new Set()
+            const aktiv =
+              mitglieder.size > 0 &&
+              [...mitglieder].every((id) => ausgewaehlt.has(id))
+            return (
+              <span key={block.id} className="inline-flex items-center gap-1">
+                <button
+                  type="button"
+                  onClick={() => toggleBlock(block.id)}
+                  className={`rounded-full border px-3 py-1 text-sm ${
+                    aktiv
+                      ? 'border-slate-900 bg-slate-900 text-white'
+                      : 'border-slate-300 text-slate-700 dark:border-slate-600 dark:text-slate-300'
+                  }`}
+                >
+                  {block.bezeichnung}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleBlockLoeschen(block.id, block.bezeichnung)}
+                  title={`Block "${block.bezeichnung}" löschen`}
+                  className="px-1 text-slate-400 dark:text-slate-500"
+                >
+                  ×
+                </button>
+              </span>
+            )
+          })}
+        </div>
+      )}
+
       {felder.length > 1 && (
         <div className="mb-2 flex gap-4 text-sm">
           {felder.map((f) => (
@@ -440,12 +535,18 @@ export function SpielzeitPage() {
       )}
 
       {mehrfachModus && ausgewaehlt.size > 0 && (
-        <div className="fixed inset-x-4 bottom-4 z-10 rounded-lg bg-slate-900 p-3 shadow-lg dark:bg-slate-700">
+        <div className="fixed inset-x-4 bottom-4 z-10 flex gap-2 rounded-lg bg-slate-900 p-3 shadow-lg dark:bg-slate-700">
           <button
             onClick={handleMehrereWechseln}
-            className="w-full rounded-md bg-white px-4 py-3 text-base font-medium text-slate-900"
+            className="flex-1 rounded-md bg-white px-4 py-3 text-base font-medium text-slate-900"
           >
             {ausgewaehlt.size} wechseln
+          </button>
+          <button
+            onClick={handleAlsBlockSpeichern}
+            className="rounded-md border border-white px-4 py-3 text-base font-medium text-white"
+          >
+            Als Block speichern
           </button>
         </div>
       )}

@@ -120,10 +120,31 @@ einwechselbar) → 1:n-Beziehung, keine einzelne Zeitspanne pro Spieler/Feld.
 - *Kumulierte Spielzeit Spieler/Turnier bzw. turnierübergreifend (FR-40/
   FR-41): Aggregation über alle Einsätze aller Spiele*
 
+### Rotationsblock / Rotationsblock_Spieler
+Turnierweit wiederverwendbare, benannte Gruppe von Spielern (FR-45),
+z.B. eine feste Wechselgruppe, die über mehrere Spiele hinweg (auch
+modusübergreifend 3vs3/6vs6) gleich bleibt. Bewusst als eigene, von
+Zuteilung/Einsatz unabhängige Entität modelliert – ein Block ist reine
+Gruppierungs-Hilfe für die Mehrfachauswahl in UC-05, keine
+Spielzeit-relevante Information selbst.
+
+| Attribut (Rotationsblock) | Typ | Beschreibung |
+|---|---|---|
+| id | UUID | Primärschlüssel |
+| turnier_id | FK → Turnier | |
+| bezeichnung | text | Frei wählbar, z.B. "Block A1" |
+
+| Attribut (Rotationsblock_Spieler) | Typ | Beschreibung |
+|---|---|---|
+| rotationsblock_id | FK → Rotationsblock | Zusammengesetzter Primärschlüssel mit spieler_id |
+| spieler_id | FK → Spieler | |
+
 ## Beziehungsdiagramm (Übersicht)
 
 ```
 Turnier 1──n Anwesenheit n──1 Spieler
+   │
+   1──n Rotationsblock 1──n Rotationsblock_Spieler n──1 Spieler
    │
    1──6 Spiel 1──1..2 Feld 1──n Zuteilung n──1 Spieler
                        │

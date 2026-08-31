@@ -198,3 +198,42 @@ create policy "authenticated full access" on public.einsatz
 -- Spiels" (Nachbedingung UC-05) wird vorerst applikationsseitig geprueft,
 -- um die Migration auf den einen in docs/architecture.md explizit offenen
 -- Punkt (zuteilung) zu fokussieren.
+
+-- ---------------------------------------------------------------------
+-- rotationsblock / rotationsblock_spieler
+-- ---------------------------------------------------------------------
+-- FR-45: turnierweit wiederverwendbare, benannte Spielergruppen (z.B. feste
+-- Rotationsbloecke bei mehreren Spielern gleichzeitig), die der Trainer
+-- waehrend der Mehrfachauswahl in UC-05 einmal speichert und danach per
+-- Tap statt erneuter manueller Auswahl abrufen kann. Bewusst freiform
+-- (keine Bindung an Feld/Modus) - derselbe Block laesst sich sowohl bei
+-- 3vs3 als auch 6vs6 verwenden, da die Zuteilung ohnehin pro Spiel/Feld
+-- bereits feststeht.
+create table public.rotationsblock (
+  id           uuid primary key default gen_random_uuid(),
+  turnier_id   uuid not null references public.turnier(id) on delete cascade,
+  bezeichnung  text not null,
+  created_at   timestamptz not null default now()
+);
+
+alter table public.rotationsblock enable row level security;
+
+create policy "authenticated full access" on public.rotationsblock
+  for all
+  to authenticated
+  using (true)
+  with check (true);
+
+create table public.rotationsblock_spieler (
+  rotationsblock_id  uuid not null references public.rotationsblock(id) on delete cascade,
+  spieler_id         uuid not null references public.spieler(id) on delete cascade,
+  primary key (rotationsblock_id, spieler_id)
+);
+
+alter table public.rotationsblock_spieler enable row level security;
+
+create policy "authenticated full access" on public.rotationsblock_spieler
+  for all
+  to authenticated
+  using (true)
+  with check (true);

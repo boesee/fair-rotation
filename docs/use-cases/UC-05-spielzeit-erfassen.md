@@ -1,6 +1,6 @@
 # UC-05: Spielzeit erfassen
 
-**Abgedeckte Anforderungen:** FR-30, FR-31, FR-32, FR-33, FR-34, FR-35, FR-36
+**Abgedeckte Anforderungen:** FR-30, FR-31, FR-32, FR-33, FR-34, FR-35, FR-36, FR-37, FR-45
 
 ## Kurzbeschreibung
 
@@ -10,7 +10,11 @@ wer am längsten ununterbrochen auf dem Feld steht – die zentrale
 Information, um faire Rotation umzusetzen. Ein ausgewechselter Spieler ist
 sofort wieder einwechselbar. Wird ein Spieler auf ein Feld eingewechselt,
 dem er laut Zuteilung nicht zugeordnet ist, erkennt die App das und lässt
-den Trainer den Feldwechsel bestätigen.
+den Trainer den Feldwechsel bestätigen. Für Block-Rotationen (mehrere
+Spieler gleichzeitig, z.B. eine feste 3er-Gruppe) gibt es eine
+Mehrfachauswahl (FR-37) sowie turnierweit speicherbare Rotationsblöcke als
+Kurzwahl dafür (FR-45), damit dieselbe Gruppe nicht in jedem Spiel erneut
+manuell zusammengestellt werden muss.
 
 ## Primärer Akteur
 
@@ -84,6 +88,36 @@ Typischerweise zu Spielbeginn, alternativ zu wiederholtem Basic Flow:
 3. Alle betroffenen Spieler erscheinen als aktiv, ihre Timer starten
    gleichzeitig.
 
+**A2c – Mehrfachauswahl-Wechsel (FR-37)**
+Für Block-Rotationen (z.B. eine feste 3er-Gruppe geht gemeinsam vom Feld),
+bei denen wiederholtes einzelnes Ein-/Auswechseln zu langsam wäre:
+1. Der Trainer aktiviert "Mehrere wechseln" – die Einzel-Aktions-Buttons
+   pro Spieler werden durch Checkboxen ersetzt.
+2. Der Trainer markiert beliebig viele Spieler, unabhängig davon ob aktiv
+   oder Bank, auch über beide Felder hinweg (bei 3vs3).
+3. Der Trainer bestätigt ("N wechseln").
+4. Die App schliesst für alle markierten aktiven Spieler den offenen
+   Einsatz und eröffnet für alle markierten Bank-Spieler einen neuen
+   Einsatz – mit demselben Zeitstempel, in möglichst wenigen Anfragen.
+5. Die App verlässt den Mehrfachauswahl-Modus automatisch.
+
+**A2d – Rotationsblock verwenden (FR-45)**
+Ergänzt A2c, wenn dieselbe Spielergruppe über mehrere Spiele hinweg immer
+gemeinsam wechselt (z.B. feste Wechselblöcke bei 6vs6 oder Unterblöcke pro
+Feld bei 3vs3):
+1. Der Trainer markiert im Mehrfachauswahl-Modus (A2c, Schritt 2) die
+   gewünschten Spieler und wählt "Als Block speichern" statt sofort zu
+   bestätigen.
+2. Der Trainer vergibt einen Namen (z.B. "Block A1").
+3. Die App speichert die Auswahl turnierweit (nicht nur für dieses Spiel)
+   als Rotationsblock.
+4. Ab sofort – auch in späteren Spielen dieses Turniers, unabhängig vom
+   Modus – zeigt die App diesen Block als Kurzwahl-Chip im
+   Mehrfachauswahl-Modus. Ein Tap markiert alle Mitglieder, die diesem
+   Spiel zugeteilt sind, gleichzeitig; ein erneuter Tap hebt die Markierung
+   wieder auf. Danach wie A2c ab Schritt 3.
+5. Der Trainer kann einen nicht mehr benötigten Block jederzeit löschen.
+
 **A3 – Spiel beenden (FR-35)**
 1. Der Trainer wählt in der Spielübersicht "Spiel beenden".
 2. Die App zeigt zur Sicherheit eine Bestätigung, insbesondere falls noch
@@ -134,3 +168,6 @@ den Status `beendet`.
 | T10 | Spiel mit 2 aktiven Spielern beenden | Beide offenen Einsätze werden geschlossen, Status wechselt zu `beendet` (A3) |
 | T11 | Nach Beenden eines Spiels versuchen, einen Spieler einzuwechseln | Aktion nicht mehr möglich (E3) |
 | T12 | Zu Spielbeginn "Alle einwechseln" bei 6 zugeteilten Bank-Spielern wählen | 6 neue Einsatz-Datensätze mit gleichem Zeitstempel, alle Timer starten gleichzeitig (A2b) |
+| T13 | 3 aktive und 3 Bank-Spieler markieren, dann "6 wechseln" bestätigen | 3 offene Einsätze werden geschlossen, 3 neue eröffnet, alle mit demselben Zeitstempel (A2c) |
+| T14 | Im Mehrfachauswahl-Modus 3 Spieler markieren und "Als Block speichern" wählen, danach ein weiteres Spiel desselben Turniers öffnen | Der gespeicherte Block erscheint dort als Chip; ein Tap markiert dieselben 3 Spieler (sofern diesem Spiel zugeteilt) automatisch (A2d) |
+| T15 | Einen gespeicherten Rotationsblock löschen | Der Chip verschwindet aus allen Spielen dieses Turniers, bestehende Einsätze bleiben unverändert (A2d, Schritt 5) |
