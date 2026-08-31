@@ -73,6 +73,17 @@ export function TurnierListPage() {
             type="date"
             value={datum}
             onChange={(e) => setDatum(e.target.value)}
+            onClick={(e) => {
+              // UX-Feedback: <input type="date"> oeffnet den Picker sonst nur
+              // beim Klick auf das kleine Kalender-Icon, nicht beim Klick ins
+              // restliche Feld. showPicker() (Safari ab 16.4) behebt das.
+              try {
+                e.currentTarget.showPicker?.()
+              } catch {
+                // Browser ohne/mit eingeschraenkter showPicker()-Unterstuetzung:
+                // Icon-Klick funktioniert weiterhin normal.
+              }
+            }}
             className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-base text-slate-900 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
           />
         </div>
